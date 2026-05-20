@@ -28,7 +28,7 @@ class OrderStatusChangedMail extends Mailable
         $settings = StoreSettings::current();
 
         return new Content(
-            markdown: 'mail.order-status-changed',
+            markdown: 'minishop::mail.order-status-changed',
             with: [
                 'order' => $this->order,
                 'currency' => $settings->currency,

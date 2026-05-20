@@ -28,7 +28,7 @@ class OrderConfirmationMail extends Mailable
         $settings = StoreSettings::current();
 
         return new Content(
-            markdown: 'mail.order-confirmation',
+            markdown: 'minishop::mail.order-confirmation',
             with: [
                 'order' => $this->order,
                 'currency' => $settings->currency,

@@ -4,6 +4,7 @@ namespace Minishop;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Minishop\Models\Category;
 use Minishop\Models\Coupon;
@@ -51,6 +52,13 @@ class MinishopServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'minishop');
+
+        Route::middleware('web')
+            ->group(__DIR__.'/../routes/web.php');
+
+        Route::middleware('api')
+            ->prefix('api')
+            ->group(__DIR__.'/../routes/api.php');
 
         $this->publishes([
             __DIR__.'/../config/minishop.php' => config_path('minishop.php'),
