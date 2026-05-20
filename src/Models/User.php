@@ -3,6 +3,8 @@
 namespace Minishop\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -12,7 +14,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Minishop\Database\Factories\UserFactory;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, Notifiable, TwoFactorAuthenticatable;
@@ -52,6 +54,11 @@ class User extends Authenticatable
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->hasAnyRole(['super-admin', 'admin', 'manager']);
     }
 
     public function customer(): HasOne

@@ -20,7 +20,7 @@ readonly class LowStockSubject
             name: $product->name,
             stockQuantity: $product->stock_quantity,
             sku: $product->sku,
-            productUrl: route('admin.products.show', $product),
+            productUrl: url(config('minishop.panel_path', 'dashboard').'/products/'.$product->id.'/edit'),
         );
     }
 
@@ -32,7 +32,7 @@ readonly class LowStockSubject
             name: "{$variant->product->name} (variant SKU: {$sku})",
             stockQuantity: $variant->stock_quantity,
             sku: $variant->sku,
-            productUrl: route('admin.products.show', $variant->product),
+            productUrl: url(config('minishop.panel_path', 'dashboard').'/products/'.$variant->product->id.'/edit'),
         );
     }
 }

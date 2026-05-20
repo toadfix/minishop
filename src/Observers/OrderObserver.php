@@ -3,6 +3,9 @@
 namespace Minishop\Observers;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Minishop\Enums\OrderStatus;
+use Minishop\Mail\OrderStatusChangedMail;
 use Minishop\Models\ActivityLog;
 use Minishop\Models\Order;
 
@@ -41,6 +44,18 @@ class OrderObserver
             'description' => $description,
             'properties' => $changed,
         ]);
+
+        $emailStatuses = [OrderStatus::Shipped, OrderStatus::Delivered, OrderStatus::Cancelled, OrderStatus::Refunded];
+
+        if (isset($changed['status']) && in_array($order->status, $emailStatuses)) {
+            $customerEmail = $order->customer?->user?->email;
+
+            if ($customerEmail) {
+                Mail::to($customerEmail)->queue(
+                    new OrderStatusChangedMail($order->load(['items', 'customer.user', 'shippingMethod']))
+                );
+            }
+        }
     }
 
     public function deleted(Order $order): void
