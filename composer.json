@@ -1,0 +1,44 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "minishop/minishop",
+    "description": "Minishop ecommerce engine with Filament v5 admin panel",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "barryvdh/laravel-dompdf": "^3.1",
+        "inertiajs/inertia-laravel": "^3.0",
+        "laravel/ai": "^0.2.8",
+        "laravel/framework": "^13.0",
+        "laravel/sanctum": "^4.0",
+        "spatie/laravel-permission": "^7.2",
+        "stripe/stripe-php": "^19.3"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "orchestra/testbench": "^10.0",
+        "phpunit/phpunit": "^12.0",
+        "laravel/pint": "^1.24"
+    },
+    "autoload": {
+        "psr-4": {
+            "Minishop\\": "src/",
+            "Minishop\\Database\\Factories\\": "database/factories/",
+            "Minishop\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Minishop\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Minishop\\MinishopServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

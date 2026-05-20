@@ -1,0 +1,151 @@
+<?php
+
+namespace Minishop;
+
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\ServiceProvider;
+use Minishop\Models\Category;
+use Minishop\Models\Coupon;
+use Minishop\Models\Order;
+use Minishop\Models\OrderReturn;
+use Minishop\Models\Product;
+use Minishop\Models\ProductVariant;
+use Minishop\Models\ShippingMethod;
+use Minishop\Models\StoreSettings;
+use Minishop\Models\Tag;
+use Minishop\Models\TaxZone;
+use Minishop\Models\TaxZoneRate;
+use Minishop\Models\User;
+use Minishop\Observers\CouponObserver;
+use Minishop\Observers\OrderObserver;
+use Minishop\Observers\OrderReturnObserver;
+use Minishop\Observers\ProductObserver;
+use Minishop\Observers\ProductVariantObserver;
+use Minishop\Observers\StoreSettingsObserver;
+use Minishop\Observers\TaxZoneObserver;
+use Minishop\Observers\TaxZoneRateObserver;
+use Minishop\Policies\CategoryPolicy;
+use Minishop\Policies\CouponPolicy;
+use Minishop\Policies\OrderPolicy;
+use Minishop\Policies\ProductPolicy;
+use Minishop\Policies\ReturnPolicy;
+use Minishop\Policies\ShippingMethodPolicy;
+use Minishop\Policies\TagPolicy;
+use Minishop\Policies\TaxZonePolicy;
+use Minishop\Policies\UserPolicy;
+use Minishop\Services\Shipping\CanadaPostCarrier;
+use Minishop\Services\Shipping\ShippingRateService;
+
+class MinishopServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/minishop.php',
+            'minishop'
+        );
+    }
+
+    public function boot(): void
+    {
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'minishop');
+
+        $this->publishes([
+            __DIR__.'/../config/minishop.php' => config_path('minishop.php'),
+        ], 'minishop-config');
+
+        $this->publishes([
+            __DIR__.'/../database/migrations' => database_path('migrations'),
+        ], 'minishop-migrations');
+
+        $this->publishes([
+            __DIR__.'/../resources/views' => resource_path('views/vendor/minishop'),
+        ], 'minishop-views');
+
+        $this->registerFactoryResolver();
+        $this->registerObservers();
+        $this->registerPolicies();
+        $this->registerShippingService();
+        $this->registerSuperAdminGate();
+    }
+
+    protected function registerFactoryResolver(): void
+    {
+        Factory::guessFactoryNamesUsing(function (string $modelName): string {
+            if (str_starts_with($modelName, 'Minishop\\Models\\')) {
+                return 'Minishop\\Database\\Factories\\'.class_basename($modelName).'Factory';
+            }
+
+            $appNamespace = app()->getNamespace();
+
+            $modelName = str_starts_with($modelName, $appNamespace.'Models\\')
+                ? substr($modelName, strlen($appNamespace.'Models\\'))
+                : class_basename($modelName);
+
+            return 'Database\\Factories\\'.$modelName.'Factory';
+        });
+
+        Factory::guessModelNamesUsing(function (Factory $factory): string {
+            $factoryClass = get_class($factory);
+
+            if (str_starts_with($factoryClass, 'Minishop\\Database\\Factories\\')) {
+                return 'Minishop\\Models\\'.str_replace('Factory', '', class_basename($factoryClass));
+            }
+
+            $appNamespace = app()->getNamespace();
+            $namespacedBasename = str_replace(['Database\\Factories\\', 'Factory'], '', $factoryClass);
+            $factoryBasename = str_replace('Factory', '', class_basename($factoryClass));
+
+            return class_exists($appNamespace.'Models\\'.$namespacedBasename)
+                ? $appNamespace.'Models\\'.$namespacedBasename
+                : $appNamespace.$factoryBasename;
+        });
+    }
+
+    protected function registerObservers(): void
+    {
+        Order::observe(OrderObserver::class);
+        OrderReturn::observe(OrderReturnObserver::class);
+        Product::observe(ProductObserver::class);
+        ProductVariant::observe(ProductVariantObserver::class);
+        Coupon::observe(CouponObserver::class);
+        TaxZone::observe(TaxZoneObserver::class);
+        TaxZoneRate::observe(TaxZoneRateObserver::class);
+        StoreSettings::observe(StoreSettingsObserver::class);
+    }
+
+    protected function registerPolicies(): void
+    {
+        Gate::policy(Category::class, CategoryPolicy::class);
+        Gate::policy(Coupon::class, CouponPolicy::class);
+        Gate::policy(Order::class, OrderPolicy::class);
+        Gate::policy(Product::class, ProductPolicy::class);
+        Gate::policy(OrderReturn::class, ReturnPolicy::class);
+        Gate::policy(ShippingMethod::class, ShippingMethodPolicy::class);
+        Gate::policy(Tag::class, TagPolicy::class);
+        Gate::policy(TaxZone::class, TaxZonePolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
+    }
+
+    protected function registerShippingService(): void
+    {
+        $this->app->singleton(ShippingRateService::class, function (): ShippingRateService {
+            $service = new ShippingRateService;
+
+            if (config('services.canada_post.username') && config('services.canada_post.customer_number')) {
+                $service->registerDriver(new CanadaPostCarrier);
+            }
+
+            return $service;
+        });
+    }
+
+    protected function registerSuperAdminGate(): void
+    {
+        Gate::before(function ($user, $ability) {
+            return $user->hasRole('super-admin') ? true : null;
+        });
+    }
+}
