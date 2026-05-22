@@ -2,9 +2,9 @@
 
 namespace Minishop\Http\Controllers\Storefront;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Minishop\Actions\ResolveTaxAction;
+use Minishop\Http\Controllers\Controller;
 use Minishop\Http\Requests\Storefront\TaxPreviewRequest;
 
 class TaxPreviewController extends Controller

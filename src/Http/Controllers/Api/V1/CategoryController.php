@@ -2,7 +2,7 @@
 
 namespace Minishop\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
+use Minishop\Http\Controllers\Controller;
 use Minishop\Http\Resources\CategoryCollection;
 use Minishop\Http\Resources\CategoryResource;
 use Minishop\Models\Category;

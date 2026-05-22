@@ -2,10 +2,10 @@
 
 namespace Minishop\Http\Controllers\Storefront;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Minishop\Enums\ShippingMethodType;
+use Minishop\Http\Controllers\Controller;
 use Minishop\Http\Requests\Storefront\FetchShippingRatesRequest;
 use Minishop\Models\ShippingMethod;
 use Minishop\Models\StoreSettings;

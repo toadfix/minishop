@@ -2,11 +2,11 @@
 
 namespace Minishop\Http\Controllers\Storefront;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Minishop\Http\Controllers\Concerns\ManagesCartItems;
+use Minishop\Http\Controllers\Controller;
 use Minishop\Http\Resources\CartResource;
 use Minishop\Models\Cart;
 

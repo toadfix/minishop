@@ -2,10 +2,10 @@
 
 namespace Minishop\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Minishop\Http\Controllers\Controller;
 use Minishop\Http\Resources\OrderResource;
 use Minishop\Models\Order;
 

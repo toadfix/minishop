@@ -2,7 +2,6 @@
 
 namespace Minishop\Http\Controllers\Storefront;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -11,6 +10,7 @@ use Inertia\Response;
 use Minishop\Actions\BuildLineItemsAction;
 use Minishop\Actions\CreateOrderAction;
 use Minishop\Enums\OrderStatus;
+use Minishop\Http\Controllers\Controller;
 use Minishop\Http\Requests\Storefront\StoreCheckoutRequest;
 use Minishop\Mail\OrderConfirmationMail;
 use Minishop\Models\Customer;

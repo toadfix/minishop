@@ -2,9 +2,9 @@
 
 namespace Minishop\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Minishop\Http\Controllers\Controller;
 use Minishop\Http\Resources\UserResource;
 
 class UserController extends Controller

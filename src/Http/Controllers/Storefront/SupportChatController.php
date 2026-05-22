@@ -2,8 +2,8 @@
 
 namespace Minishop\Http\Controllers\Storefront;
 
-use App\Http\Controllers\Controller;
 use Minishop\Ai\Agents\SupportAgent;
+use Minishop\Http\Controllers\Controller;
 use Minishop\Http\Requests\Storefront\StoreChatMessageRequest;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 

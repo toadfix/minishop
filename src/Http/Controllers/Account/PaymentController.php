@@ -2,10 +2,10 @@
 
 namespace Minishop\Http\Controllers\Account;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Minishop\Http\Controllers\Controller;
 
 class PaymentController extends Controller
 {

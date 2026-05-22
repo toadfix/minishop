@@ -2,11 +2,11 @@
 
 namespace Minishop\Http\Controllers\Webhooks;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Mail;
 use Minishop\Enums\OrderStatus;
+use Minishop\Http\Controllers\Controller;
 use Minishop\Mail\OrderConfirmationMail;
 use Minishop\Models\Order;
 use Stripe\Exception\SignatureVerificationException;

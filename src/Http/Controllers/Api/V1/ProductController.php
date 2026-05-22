@@ -2,8 +2,8 @@
 
 namespace Minishop\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Minishop\Http\Controllers\Controller;
 use Minishop\Http\Resources\ProductCollection;
 use Minishop\Http\Resources\ProductResource;
 use Minishop\Models\Product;

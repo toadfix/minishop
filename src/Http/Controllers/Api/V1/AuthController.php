@@ -2,20 +2,34 @@
 
 namespace Minishop\Http\Controllers\Api\V1;
 
-use App\Actions\Fortify\CreateNewUser;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
+use Minishop\Http\Controllers\Controller;
 use Minishop\Http\Requests\Api\V1\LoginRequest;
 use Minishop\Models\User;
 
 class AuthController extends Controller
 {
-    public function register(Request $request, CreateNewUser $creator): JsonResponse
+    public function register(Request $request): JsonResponse
     {
-        $user = $creator->create($request->all());
+        $data = Validator::make($request->all(), [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'confirmed', Password::defaults()],
+        ])->validate();
+
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => $data['password'],
+        ]);
+
+        $user->assignRole('customer');
+        $user->customer()->create(['is_active' => true]);
 
         return response()->json($this->tokenResponse($user), 201);
     }

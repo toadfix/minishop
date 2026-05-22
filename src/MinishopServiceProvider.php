@@ -2,10 +2,16 @@
 
 namespace Minishop;
 
+use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Fortify\Contracts\CreatesNewUsers;
+use Minishop\Actions\Fortify\CreateNewUser;
+use Minishop\Console\Commands\InstallCommand;
+use Minishop\Http\Responses\LoginResponse;
+use Minishop\Http\Responses\RegisterResponse;
 use Minishop\Models\Category;
 use Minishop\Models\Coupon;
 use Minishop\Models\Order;
@@ -46,19 +52,40 @@ class MinishopServiceProvider extends ServiceProvider
             __DIR__.'/../config/minishop.php',
             'minishop'
         );
+
+        $this->app->singleton(
+            \Laravel\Fortify\Contracts\LoginResponse::class,
+            LoginResponse::class
+        );
+        $this->app->singleton(
+            \Laravel\Fortify\Contracts\RegisterResponse::class,
+            RegisterResponse::class
+        );
+        $this->app->singleton(
+            CreatesNewUsers::class,
+            CreateNewUser::class
+        );
     }
 
     public function boot(): void
     {
+        EncryptCookies::except('cart_token');
+
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'minishop');
-
-        Route::middleware('web')
-            ->group(__DIR__.'/../routes/web.php');
 
         Route::middleware('api')
             ->prefix('api')
             ->group(__DIR__.'/../routes/api.php');
+
+        if (config('minishop.load_storefront_routes', false)) {
+            Route::middleware('web')
+                ->group(__DIR__.'/../routes/web.php');
+        }
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([InstallCommand::class]);
+        }
 
         $this->publishes([
             __DIR__.'/../config/minishop.php' => config_path('minishop.php'),

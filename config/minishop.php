@@ -1,6 +1,12 @@
 <?php
 
 return [
+    /*
+     * Set to true only when the host app has Inertia + Vue configured
+     * and has published the Minishop storefront assets.
+     */
+    'load_storefront_routes' => env('MINISHOP_STOREFRONT', false),
+
     'low_stock_notification_email' => env('MINISHOP_LOW_STOCK_EMAIL'),
 
     'panel_path' => env('MINISHOP_PANEL_PATH', 'dashboard'),
