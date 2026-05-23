@@ -15,9 +15,6 @@ class StoreSettings extends Model
         'tax_mode',
         'gst_number',
         'active_payment_gateway',
-        'paymongo_public_key',
-        'paymongo_secret_key',
-        'paymongo_webhook_secret',
         'low_stock_threshold',
         'sale_discount_percentage',
         'origin_postcode',
@@ -26,8 +23,6 @@ class StoreSettings extends Model
     protected function casts(): array
     {
         return [
-            'paymongo_secret_key' => 'encrypted',
-            'paymongo_webhook_secret' => 'encrypted',
             'tax_rate' => 'decimal:2',
             'low_stock_threshold' => 'integer',
             'sale_discount_percentage' => 'integer',

@@ -32,6 +32,7 @@ use Minishop\Observers\ProductVariantObserver;
 use Minishop\Observers\StoreSettingsObserver;
 use Minishop\Observers\TaxZoneObserver;
 use Minishop\Observers\TaxZoneRateObserver;
+use Minishop\Payments\PaymentManager;
 use Minishop\Policies\CategoryPolicy;
 use Minishop\Policies\CouponPolicy;
 use Minishop\Policies\OrderPolicy;
@@ -41,6 +42,9 @@ use Minishop\Policies\ShippingMethodPolicy;
 use Minishop\Policies\TagPolicy;
 use Minishop\Policies\TaxZonePolicy;
 use Minishop\Policies\UserPolicy;
+use Minishop\Rendering\BladeRenderer;
+use Minishop\Rendering\InertiaRenderer;
+use Minishop\Rendering\StorefrontRendererContract;
 use Minishop\Services\Shipping\CanadaPostCarrier;
 use Minishop\Services\Shipping\ShippingRateService;
 
@@ -65,13 +69,28 @@ class MinishopServiceProvider extends ServiceProvider
             CreatesNewUsers::class,
             CreateNewUser::class
         );
+
+        $this->app->singleton('minishop.payment', fn ($app) => new PaymentManager($app));
+
+        $this->app->singleton(StorefrontRendererContract::class, function ($app) {
+            $driver = config('minishop.renderer', 'inertia');
+
+            return match (true) {
+                $driver === 'inertia' => new InertiaRenderer,
+                $driver === 'blade' => new BladeRenderer,
+                class_exists($driver) => $app->make($driver),
+                default => throw new \InvalidArgumentException("Minishop renderer [{$driver}] is not supported."),
+            };
+        });
     }
 
     public function boot(): void
     {
         EncryptCookies::except('cart_token');
 
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->publishesMigrations([
+            __DIR__.'/../database/migrations' => database_path('migrations'),
+        ], 'minishop-migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'minishop');
 
         Route::middleware('api')
@@ -92,12 +111,12 @@ class MinishopServiceProvider extends ServiceProvider
         ], 'minishop-config');
 
         $this->publishes([
-            __DIR__.'/../database/migrations' => database_path('migrations'),
-        ], 'minishop-migrations');
-
-        $this->publishes([
             __DIR__.'/../resources/views' => resource_path('views/vendor/minishop'),
         ], 'minishop-views');
+
+        $this->publishes([
+            __DIR__.'/../stubs/blade' => resource_path('views/storefront'),
+        ], 'minishop-blade-stubs');
 
         $this->registerFactoryResolver();
         $this->registerObservers();

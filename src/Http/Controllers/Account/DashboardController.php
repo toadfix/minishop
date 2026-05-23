@@ -3,13 +3,14 @@
 namespace Minishop\Http\Controllers\Account;
 
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 use Minishop\Http\Controllers\Controller;
+use Minishop\Rendering\StorefrontRendererContract;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request): Response
+    public function __construct(private StorefrontRendererContract $renderer) {}
+
+    public function __invoke(Request $request): mixed
     {
         $customer = $request->user()->customer;
 
@@ -20,7 +21,7 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        return Inertia::render('storefront/Account/Dashboard', [
+        return $this->renderer->render('storefront/Account/Dashboard', [
             'recentOrders' => $recentOrders,
             'totalOrders' => $customer->orders()->count(),
         ]);

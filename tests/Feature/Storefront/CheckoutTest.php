@@ -260,6 +260,9 @@ class CheckoutTest extends TestCase
 
     public function test_confirmation_page_renders_with_order(): void
     {
+        Cache::forget('store_settings');
+        StoreSettings::current()->update(['active_payment_gateway' => 'cod']);
+
         $product = Product::factory()->create(['price' => 5000, 'stock_quantity' => 5]);
 
         $response = $this->post(route('storefront.checkout.store'), $this->validPayload([

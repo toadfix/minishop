@@ -3,14 +3,15 @@
 namespace Minishop\Http\Controllers\Account;
 
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 use Minishop\Http\Controllers\Controller;
 use Minishop\Models\Order;
+use Minishop\Rendering\StorefrontRendererContract;
 
 class OrdersController extends Controller
 {
-    public function index(Request $request): Response
+    public function __construct(private StorefrontRendererContract $renderer) {}
+
+    public function index(Request $request): mixed
     {
         $orders = $request->user()->customer
             ->orders()
@@ -18,12 +19,12 @@ class OrdersController extends Controller
             ->latest()
             ->paginate(10);
 
-        return Inertia::render('storefront/Account/Orders/Index', [
+        return $this->renderer->render('storefront/Account/Orders/Index', [
             'orders' => $orders,
         ]);
     }
 
-    public function show(Request $request, Order $order): Response
+    public function show(Request $request, Order $order): mixed
     {
         abort_unless(
             $order->customer_id === $request->user()->customer?->id,
@@ -32,7 +33,7 @@ class OrdersController extends Controller
 
         $order->load(['items.product', 'items.variant', 'shippingMethod', 'coupon']);
 
-        return Inertia::render('storefront/Account/Orders/Show', [
+        return $this->renderer->render('storefront/Account/Orders/Show', [
             'order' => $order,
         ]);
     }

@@ -3,14 +3,15 @@
 namespace Minishop\Http\Controllers\Account;
 
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 use Minishop\Http\Controllers\Controller;
+use Minishop\Rendering\StorefrontRendererContract;
 
 class PaymentController extends Controller
 {
-    public function index(Request $request): Response
+    public function __construct(private StorefrontRendererContract $renderer) {}
+
+    public function index(Request $request): mixed
     {
-        return Inertia::render('storefront/Account/Payment/Index');
+        return $this->renderer->render('storefront/Account/Payment/Index');
     }
 }

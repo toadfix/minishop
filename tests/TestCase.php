@@ -12,7 +12,6 @@ use Livewire\LivewireServiceProvider;
 use Minishop\MinishopPanelProvider;
 use Minishop\MinishopServiceProvider;
 use Minishop\Models\User;
-use Orchestra\Testbench\Concerns\WithLaravelMigrations;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
@@ -21,7 +20,15 @@ use Spatie\Permission\PermissionServiceProvider;
 
 abstract class TestCase extends BaseTestCase
 {
-    use WithLaravelMigrations;
+    protected function defineDatabaseMigrations(): void
+    {
+        if (! static::usesRefreshDatabaseTestingConcern()) {
+            return;
+        }
+
+        $this->loadMigrationsFrom(\Orchestra\Testbench\default_migration_path());
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+    }
 
     protected function getPackageProviders($app): array
     {

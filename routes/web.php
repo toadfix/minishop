@@ -1,7 +1,8 @@
 <?php
 
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 use Minishop\Http\Controllers\Account\AddressController;
 use Minishop\Http\Controllers\Account\DashboardController as AccountDashboardController;
 use Minishop\Http\Controllers\Account\OrdersController as AccountOrdersController;
@@ -14,8 +15,8 @@ use Minishop\Http\Controllers\Storefront\PaymentController;
 use Minishop\Http\Controllers\Storefront\ProductController as StorefrontProductController;
 use Minishop\Http\Controllers\Storefront\SupportChatController;
 use Minishop\Http\Controllers\Storefront\TaxPreviewController;
-use Minishop\Http\Controllers\Webhooks\PayMongoWebhookController;
-use Minishop\Http\Controllers\Webhooks\StripeWebhookController;
+use Minishop\Http\Controllers\Webhooks\WebhookController;
+use Minishop\Rendering\StorefrontRendererContract;
 
 Route::get('/', HomeController::class)->name('home');
 
@@ -46,20 +47,21 @@ Route::prefix('checkout')->name('storefront.checkout.')->group(function () {
     Route::post('/', [CheckoutController::class, 'store'])->name('store');
     Route::get('/pay/{order:order_number}', [PaymentController::class, 'show'])->name('payment.show');
     Route::post('/pay/{order:order_number}/stripe', [PaymentController::class, 'stripeIntent'])->name('payment.stripe');
-    Route::post('/pay/{order:order_number}/paymongo', [PaymentController::class, 'paymongoCheckout'])->name('payment.paymongo');
-    Route::get('/pay/{order:order_number}/callback', [PaymentController::class, 'paymongoCallback'])->name('payment.callback');
 });
 
-Route::post('/webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
-Route::post('/webhooks/paymongo', PayMongoWebhookController::class)->name('webhooks.paymongo');
+// Webhook routes are called by payment providers (no browser session/CSRF token).
+Route::withoutMiddleware(VerifyCsrfToken::class)->middleware('throttle:60,1')->group(function () {
+    Route::post('/webhooks/stripe', fn (Request $r) => app(WebhookController::class)->handle($r, 'stripe'))->name('webhooks.stripe');
+    Route::post('/webhooks/{gateway}', [WebhookController::class, 'handle'])->name('webhooks.gateway');
+});
 
 Route::get('/order-confirmation/{order}', [CheckoutController::class, 'confirmation'])
     ->name('storefront.order.confirmation');
 
 // Storefront registration page
-Route::get('/register/customer', fn () => Inertia::render('storefront/auth/Register'))
-    ->middleware('guest')
-    ->name('storefront.register');
+Route::get('/register/customer', function () {
+    return app(StorefrontRendererContract::class)->render('storefront/auth/Register');
+})->middleware('guest')->name('storefront.register');
 
 // Customer account area
 Route::middleware(['auth', 'verified', 'role:customer'])->prefix('account')->name('account.')->group(function () {

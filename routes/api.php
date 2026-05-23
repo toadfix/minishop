@@ -11,8 +11,8 @@ use Minishop\Http\Controllers\Api\V1\UserController;
 
 Route::prefix('v1')->name('api.v1.')->group(function () {
     // Public routes
-    Route::post('auth/register', [AuthController::class, 'register'])->name('auth.register');
-    Route::post('auth/login', [AuthController::class, 'login'])->name('auth.login');
+    Route::post('auth/register', [AuthController::class, 'register'])->name('auth.register')->middleware('throttle:6,1');
+    Route::post('auth/login', [AuthController::class, 'login'])->name('auth.login')->middleware('throttle:6,1');
 
     Route::get('products', [ProductController::class, 'index'])->name('products.index');
     Route::get('products/{product}', [ProductController::class, 'show'])->name('products.show');

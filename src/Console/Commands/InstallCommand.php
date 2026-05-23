@@ -7,7 +7,7 @@ use Minishop\Database\Seeders\RoleAndPermissionSeeder;
 
 class InstallCommand extends Command
 {
-    protected $signature = 'minishop:install';
+    protected $signature = 'minishop:install {--renderer=inertia : The storefront renderer to use (inertia|blade)}';
 
     protected $description = 'Publish and set up the Minishop ecommerce package';
 
@@ -30,6 +30,15 @@ class InstallCommand extends Command
         $this->call('db:seed', [
             '--class' => RoleAndPermissionSeeder::class,
         ]);
+
+        if ($this->option('renderer') === 'blade') {
+            $this->call('vendor:publish', [
+                '--tag' => 'minishop-blade-stubs',
+                '--force' => false,
+            ]);
+            $this->line('  Blade view stubs published to <fg=cyan>resources/views/storefront/</>.');
+            $this->line('  Set <fg=yellow>MINISHOP_RENDERER=blade</> in your .env.');
+        }
 
         $this->newLine();
         $this->info('Minishop installed successfully.');

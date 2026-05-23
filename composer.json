@@ -41,7 +41,10 @@
             "providers": [
                 "Minishop\\MinishopServiceProvider",
                 "Minishop\\MinishopPanelProvider"
-            ]
+            ],
+            "aliases": {
+                "MinishopPayment": "Minishop\\Payments\\Facades\\Payment"
+            }
         }
     },
     "minimum-stability": "dev",

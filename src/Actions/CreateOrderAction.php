@@ -133,7 +133,9 @@ class CreateOrderAction
 
             $this->decrementStock->execute($data['items']);
 
-            $coupon?->increment('used_count');
+            if ($coupon && $discountAmount > 0) {
+                $coupon->increment('used_count');
+            }
 
             return $order;
         });

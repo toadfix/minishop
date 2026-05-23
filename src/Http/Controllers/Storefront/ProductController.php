@@ -3,17 +3,18 @@
 namespace Minishop\Http\Controllers\Storefront;
 
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 use Minishop\Http\Controllers\Controller;
 use Minishop\Models\Category;
 use Minishop\Models\Product;
 use Minishop\Models\StoreSettings;
 use Minishop\Models\Tag;
+use Minishop\Rendering\StorefrontRendererContract;
 
 class ProductController extends Controller
 {
-    public function index(Request $request): Response
+    public function __construct(private StorefrontRendererContract $renderer) {}
+
+    public function index(Request $request): mixed
     {
         $products = Product::query()
             ->where('is_active', true)
@@ -62,7 +63,7 @@ class ProductController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'slug', 'color']);
 
-        return Inertia::render('storefront/Products/Index', [
+        return $this->renderer->render('storefront/Products/Index', [
             'products' => $products,
             'categories' => $categories,
             'tags' => $tags,
@@ -71,7 +72,7 @@ class ProductController extends Controller
         ]);
     }
 
-    public function show(Product $product): Response
+    public function show(Product $product): mixed
     {
         abort_unless($product->is_active, 404);
 
@@ -91,7 +92,7 @@ class ProductController extends Controller
             $product->load(['bundleItems.componentProduct.images', 'bundleItems.componentVariant.optionValues.option']);
         }
 
-        return Inertia::render('storefront/Products/Show', [
+        return $this->renderer->render('storefront/Products/Show', [
             'product' => $product,
             'in_stock' => $product->getEffectiveStock() > 0,
             'sale_discount_percentage' => StoreSettings::current()->sale_discount_percentage ?? 0,

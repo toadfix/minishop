@@ -2,15 +2,16 @@
 
 namespace Minishop\Http\Controllers\Storefront;
 
-use Inertia\Inertia;
-use Inertia\Response;
 use Minishop\Http\Controllers\Controller;
 use Minishop\Models\Category;
 use Minishop\Models\Product;
+use Minishop\Rendering\StorefrontRendererContract;
 
 class HomeController extends Controller
 {
-    public function __invoke(): Response
+    public function __construct(private StorefrontRendererContract $renderer) {}
+
+    public function __invoke(): mixed
     {
         $featuredProducts = Product::query()
             ->where('is_active', true)
@@ -27,7 +28,7 @@ class HomeController extends Controller
             ->orderBy('name')
             ->get();
 
-        return Inertia::render('storefront/Home', [
+        return $this->renderer->render('storefront/Home', [
             'featuredProducts' => $featuredProducts,
             'categories' => $categories,
         ]);

@@ -4,19 +4,20 @@ namespace Minishop\Http\Controllers\Account;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 use Minishop\Http\Controllers\Controller;
 use Minishop\Http\Requests\Account\UpsertAddressRequest;
+use Minishop\Rendering\StorefrontRendererContract;
 
 class AddressController extends Controller
 {
-    public function edit(Request $request): Response
+    public function __construct(private StorefrontRendererContract $renderer) {}
+
+    public function edit(Request $request): mixed
     {
         $customer = $request->user()->customer;
         $address = $customer->defaultBillingAddress;
 
-        return Inertia::render('storefront/Account/Address/Edit', [
+        return $this->renderer->render('storefront/Account/Address/Edit', [
             'address' => $address,
         ]);
     }

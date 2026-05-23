@@ -3,10 +3,9 @@
 namespace Minishop\Http\Controllers\Storefront;
 
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use Inertia\Inertia;
-use Inertia\Response;
 use Minishop\Actions\BuildLineItemsAction;
 use Minishop\Actions\CreateOrderAction;
 use Minishop\Enums\OrderStatus;
@@ -17,12 +16,16 @@ use Minishop\Models\Customer;
 use Minishop\Models\Order;
 use Minishop\Models\StoreSettings;
 use Minishop\Models\User;
+use Minishop\Payments\Facades\Payment;
+use Minishop\Rendering\StorefrontRendererContract;
 
 class CheckoutController extends Controller
 {
-    public function create(): Response
+    public function __construct(private StorefrontRendererContract $renderer) {}
+
+    public function create(): mixed
     {
-        return Inertia::render('storefront/Checkout');
+        return $this->renderer->render('storefront/Checkout');
     }
 
     public function store(StoreCheckoutRequest $request, BuildLineItemsAction $buildLineItems, CreateOrderAction $createOrder): RedirectResponse
@@ -61,9 +64,11 @@ class CheckoutController extends Controller
             'notes' => $validated['notes'] ?? null,
         ]);
 
+        $request->session()->put('checkout_order_id', $order->id);
+
         $gateway = $order->payment_gateway;
 
-        if (in_array($gateway, ['stripe', 'paymongo'])) {
+        if (Payment::driver($gateway)->requiresPaymentStep()) {
             return redirect()->route('storefront.checkout.payment.show', $order->order_number);
         }
 
@@ -75,12 +80,22 @@ class CheckoutController extends Controller
         return redirect()->route('storefront.order.confirmation', $order);
     }
 
-    public function confirmation(Order $order): Response
+    public function confirmation(Order $order, Request $request): mixed
     {
+        $this->authorizeOrderAccess($order, $request);
+
         $order->load(['items', 'customer.user']);
 
-        return Inertia::render('storefront/OrderConfirmation', [
+        return $this->renderer->render('storefront/OrderConfirmation', [
             'order' => $order,
         ]);
+    }
+
+    private function authorizeOrderAccess(Order $order, Request $request): void
+    {
+        $ownedBySession = $request->session()->get('checkout_order_id') === $order->id;
+        $ownedByUser = auth()->check() && $order->customer?->user_id === auth()->id();
+
+        abort_unless($ownedBySession || $ownedByUser, 403);
     }
 }

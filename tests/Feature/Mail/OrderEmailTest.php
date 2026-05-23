@@ -25,8 +25,6 @@ class OrderEmailTest extends TestCase
 
     private string $stripeWebhookSecret = 'whsec_test_stripe_secret';
 
-    private string $paymongoWebhookSecret = 'test_paymongo_webhook_secret';
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -134,44 +132,6 @@ class OrderEmailTest extends TestCase
         });
     }
 
-    public function test_confirmation_email_queued_after_paymongo_webhook_payment_success(): void
-    {
-        Mail::fake();
-        StoreSettings::current()->update(['paymongo_webhook_secret' => $this->paymongoWebhookSecret]);
-
-        $shippingMethod = ShippingMethod::factory()->create();
-        $order = Order::factory()->create([
-            'order_number' => 'ORD-MAIL-PM-001',
-            'payment_status' => 'pending',
-            'payment_gateway' => 'paymongo',
-            'shipping_method_id' => $shippingMethod->id,
-        ]);
-
-        $eventPayload = json_encode([
-            'data' => [
-                'attributes' => [
-                    'type' => 'payment.paid',
-                    'data' => [
-                        'attributes' => [
-                            'metadata' => ['order_number' => 'ORD-MAIL-PM-001'],
-                        ],
-                    ],
-                ],
-            ],
-        ]);
-
-        $sigHeader = $this->buildPayMongoSignatureHeader($eventPayload);
-
-        $this->call('POST', route('webhooks.paymongo'), [], [], [], [
-            'HTTP_PAYMONGO_SIGNATURE' => $sigHeader,
-            'CONTENT_TYPE' => 'application/json',
-        ], $eventPayload)->assertStatus(200);
-
-        Mail::assertQueued(OrderConfirmationMail::class, function (OrderConfirmationMail $mail) use ($order) {
-            return $mail->order->id === $order->id;
-        });
-    }
-
     public function test_status_email_queued_when_shipped(): void
     {
         Mail::fake();
@@ -254,15 +214,6 @@ class OrderEmailTest extends TestCase
         $signature = hash_hmac('sha256', $signedPayload, $this->stripeWebhookSecret);
 
         return "t={$timestamp},v1={$signature}";
-    }
-
-    private function buildPayMongoSignatureHeader(string $payload): string
-    {
-        $timestamp = (string) time();
-        $signedPayload = "{$timestamp}.{$payload}";
-        $signature = hash_hmac('sha256', $signedPayload, $this->paymongoWebhookSecret);
-
-        return "t={$timestamp},te={$signature}";
     }
 
     private function createOrderWithCustomer(OrderStatus $status = OrderStatus::Pending): Order

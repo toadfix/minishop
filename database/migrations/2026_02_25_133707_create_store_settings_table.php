@@ -20,9 +20,6 @@ return new class extends Migration
             $table->text('stripe_public_key')->nullable();
             $table->text('stripe_secret_key')->nullable();
             $table->text('stripe_webhook_secret')->nullable();
-            $table->text('paymongo_public_key')->nullable();
-            $table->text('paymongo_secret_key')->nullable();
-            $table->text('paymongo_webhook_secret')->nullable();
             $table->timestamps();
         });
     }
