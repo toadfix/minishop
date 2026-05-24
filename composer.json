@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "minishop/minishop",
+    "name": "toadfix/minishop",
     "description": "Drop-in ecommerce package for Laravel with Filament v5 admin panel and Sanctum API",
     "type": "library",
     "license": "MIT",
