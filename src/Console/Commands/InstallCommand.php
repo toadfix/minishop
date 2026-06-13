@@ -3,11 +3,16 @@
 namespace Minishop\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Hash;
 use Minishop\Database\Seeders\RoleAndPermissionSeeder;
+use Minishop\Models\User;
+use Spatie\Permission\Models\Role;
 
 class InstallCommand extends Command
 {
-    protected $signature = 'minishop:install {--renderer=inertia : The storefront renderer to use (inertia|blade)}';
+    protected $signature = 'minishop:install
+        {--renderer=inertia : The storefront renderer to use (inertia|blade)}
+        {--no-admin : Skip creating the initial admin user}';
 
     protected $description = 'Publish and set up the Minishop ecommerce package';
 
@@ -20,16 +25,26 @@ class InstallCommand extends Command
             '--force' => false,
         ]);
 
-        $this->call('vendor:publish', [
-            '--tag' => 'minishop-migrations',
-            '--force' => false,
-        ]);
+        if ($this->migrationsAlreadyPublished()) {
+            $this->line('  Minishop migrations already published — skipping.');
+        } else {
+            $this->call('vendor:publish', [
+                '--tag' => 'minishop-migrations',
+                '--force' => false,
+            ]);
+        }
+
+        $this->configureAuthModel();
 
         $this->call('migrate');
 
         $this->call('db:seed', [
             '--class' => RoleAndPermissionSeeder::class,
         ]);
+
+        if (! $this->option('no-admin')) {
+            $this->createAdminUser();
+        }
 
         if ($this->option('renderer') === 'blade') {
             $this->call('vendor:publish', [
@@ -51,5 +66,101 @@ class InstallCommand extends Command
         $this->newLine();
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Detect whether Minishop migrations have already been published, so a
+     * re-run of the installer does not copy a second, freshly-timestamped set
+     * (publishesMigrations() prepends a new timestamp on every publish).
+     */
+    protected function migrationsAlreadyPublished(): bool
+    {
+        $sentinel = glob(database_path('migrations/*_create_store_settings_table.php'));
+
+        return ! empty($sentinel);
+    }
+
+    /**
+     * Point the host application's auth provider at Minishop's User model.
+     *
+     * Minishop's User model carries the HasRoles, Sanctum and Fortify traits the
+     * package relies on. Without this the host app authenticates with the stock
+     * App\Models\User and the panel blows up on the first hasRole() call.
+     */
+    protected function configureAuthModel(): void
+    {
+        $expected = User::class;
+
+        if (config('auth.providers.users.model') === $expected) {
+            return;
+        }
+
+        $env = base_path('.env');
+
+        if (! is_file($env)) {
+            $this->warn("  Could not find .env — set AUTH_MODEL={$expected} manually.");
+
+            return;
+        }
+
+        $contents = file_get_contents($env);
+
+        if (preg_match('/^AUTH_MODEL=.*$/m', $contents)) {
+            $contents = preg_replace('/^AUTH_MODEL=.*$/m', 'AUTH_MODEL="'.addslashes($expected).'"', $contents);
+        } else {
+            $contents = rtrim($contents, "\n")."\n\nAUTH_MODEL=\"".addslashes($expected)."\"\n";
+        }
+
+        file_put_contents($env, $contents);
+
+        // Apply for the remainder of this command (migrations/seeders/admin).
+        config(['auth.providers.users.model' => $expected]);
+
+        $this->line("  Set <fg=yellow>AUTH_MODEL</> to <fg=cyan>{$expected}</> in .env.");
+    }
+
+    /**
+     * Create the first admin user with the super-admin role on the web guard.
+     */
+    protected function createAdminUser(): void
+    {
+        $this->newLine();
+
+        if (! $this->confirm('Create an admin user now?', true)) {
+            return;
+        }
+
+        $name = $this->ask('Name', 'Admin');
+        $email = $this->ask('Email');
+
+        if (blank($email)) {
+            $this->warn('  Skipped admin creation — no email provided.');
+
+            return;
+        }
+
+        if (User::where('email', $email)->exists()) {
+            $this->warn("  A user with {$email} already exists — skipping.");
+
+            return;
+        }
+
+        $password = $this->secret('Password') ?: 'password';
+
+        $user = User::create([
+            'name' => $name,
+            'email' => $email,
+            'password' => Hash::make($password),
+        ]);
+
+        $role = Role::where('name', 'super-admin')
+            ->where('guard_name', config('auth.defaults.guard', 'web'))
+            ->first();
+
+        if ($role) {
+            $user->roles()->syncWithoutDetaching([$role->id]);
+        }
+
+        $this->line("  Admin user <fg=cyan>{$email}</> created with the <fg=cyan>super-admin</> role.");
     }
 }
