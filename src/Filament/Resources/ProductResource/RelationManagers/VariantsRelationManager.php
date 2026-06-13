@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Minishop\Models\Product;
 use Minishop\Models\ProductOptionValue;
+use Minishop\Models\ProductVariant;
 
 /**
  * Manage a variable product's variants: SKU, price, stock and the option
@@ -97,12 +98,15 @@ class VariantsRelationManager extends RelationManager
                     ->searchable()
                     ->placeholder('—'),
 
-                TextColumn::make('optionValues.value')
+                TextColumn::make('options')
                     ->label('Options')
                     ->badge()
-                    ->formatStateUsing(fn ($state, ProductOptionValue $record) => $record->option
-                        ? "{$record->option->name}: {$record->value}"
-                        : $record->value),
+                    ->getStateUsing(fn (ProductVariant $record) => $record->optionValues
+                        ->map(fn (ProductOptionValue $value) => $value->option
+                            ? "{$value->option->name}: {$value->value}"
+                            : $value->value)
+                        ->all())
+                    ->placeholder('—'),
 
                 TextColumn::make('price')
                     ->money('usd', divideBy: 100)

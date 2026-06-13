@@ -34,4 +34,28 @@ class ProductVariantManagementTest extends TestCase
             $this->assertFalse(VariantsRelationManager::canViewForRecord($nonVariable, EditProduct::class));
         }
     }
+
+    public function test_variant_option_value_labels_are_built_from_the_owning_options(): void
+    {
+        $product = Product::factory()->variable()->create();
+        $option = $product->options()->create(['name' => 'Size', 'position' => 0]);
+        $small = $option->values()->create(['value' => 'Small', 'position' => 0]);
+
+        $variant = $product->variants()->create([
+            'sku' => 'TEE-S',
+            'price' => 2500,
+            'stock_quantity' => 5,
+            'is_active' => true,
+        ]);
+        $variant->optionValues()->attach($small->id);
+
+        // Mirrors the variants table's "Options" column state, which receives
+        // the variant record (not the option value) — guards the closure that
+        // previously type-hinted the wrong model.
+        $labels = $variant->load('optionValues.option')->optionValues
+            ->map(fn ($value) => $value->option ? "{$value->option->name}: {$value->value}" : $value->value)
+            ->all();
+
+        $this->assertSame(['Size: Small'], $labels);
+    }
 }
