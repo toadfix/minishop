@@ -46,6 +46,8 @@ class InstallCommand extends Command
             $this->createAdminUser();
         }
 
+        $this->publishFilamentAssets();
+
         if ($this->option('renderer') === 'blade') {
             $this->call('vendor:publish', [
                 '--tag' => 'minishop-blade-stubs',
@@ -66,6 +68,58 @@ class InstallCommand extends Command
         $this->newLine();
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Publish Filament's compiled CSS/JS to the host's public directory and
+     * register a Composer hook so they are re-published on every install/update.
+     *
+     * Filament serves its frontend from public/css/filament and
+     * public/js/filament; without these assets the admin panel renders but its
+     * JavaScript never initialises (blank tables, dead sidebar/dropdowns).
+     */
+    protected function publishFilamentAssets(): void
+    {
+        $this->call('filament:assets');
+        $this->registerFilamentAssetsHook();
+    }
+
+    /**
+     * Add `@php artisan filament:assets` to the host composer.json's
+     * post-autoload-dump scripts so the assets stay in sync after Filament
+     * upgrades. No-op if it is already present or composer.json is missing.
+     */
+    protected function registerFilamentAssetsHook(): void
+    {
+        $path = base_path('composer.json');
+
+        if (! is_file($path)) {
+            return;
+        }
+
+        $composer = json_decode(file_get_contents($path), true);
+
+        if (! is_array($composer)) {
+            return;
+        }
+
+        $hook = '@php artisan filament:assets --ansi';
+        $scripts = $composer['scripts']['post-autoload-dump'] ?? [];
+        $scripts = is_array($scripts) ? $scripts : [$scripts];
+
+        if (in_array($hook, $scripts, true)) {
+            return;
+        }
+
+        $scripts[] = $hook;
+        $composer['scripts']['post-autoload-dump'] = $scripts;
+
+        file_put_contents(
+            $path,
+            json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n"
+        );
+
+        $this->line('  Registered <fg=cyan>filament:assets</> in composer.json post-autoload-dump.');
     }
 
     /**
