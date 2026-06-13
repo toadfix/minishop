@@ -2,6 +2,9 @@
 
 namespace Minishop\Filament\Resources;
 
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -9,9 +12,6 @@ use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -20,6 +20,7 @@ use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Minishop\Enums\ProductType;
 use Minishop\Filament\Resources\ProductResource\Pages;
+use Minishop\Filament\Resources\ProductResource\RelationManagers;
 use Minishop\Models\Product;
 
 class ProductResource extends Resource
@@ -177,6 +178,14 @@ class ProductResource extends Resource
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\OptionsRelationManager::class,
+            RelationManagers\VariantsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
