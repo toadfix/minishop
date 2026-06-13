@@ -30,10 +30,8 @@ class PaymentTest extends TestCase
         $this->withSession(['checkout_order_id' => $order->id])
             ->get(route('storefront.checkout.payment.show', $order->order_number))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->component('storefront/Payment')
-                ->has('order')
-            );
+            ->assertViewIs('minishop::storefront.payment')
+            ->assertViewHas('order');
     }
 
     public function test_payment_page_returns_403_without_session_or_auth(): void

@@ -50,7 +50,7 @@ class CheckoutTest extends TestCase
     {
         $this->get(route('storefront.checkout.create'))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->component('storefront/Checkout'));
+            ->assertViewIs('minishop::storefront.checkout');
     }
 
     public function test_order_is_created_with_valid_data(): void
@@ -273,7 +273,7 @@ class CheckoutTest extends TestCase
 
         $this->get($confirmationUrl)
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->component('storefront/OrderConfirmation'));
+            ->assertViewIs('minishop::storefront.order-confirmation');
     }
 
     public function test_order_stores_tax_zone_name_and_breakdown_when_zone_based(): void

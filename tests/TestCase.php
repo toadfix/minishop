@@ -3,7 +3,6 @@
 namespace Minishop\Tests;
 
 use Filament\FilamentServiceProvider;
-use Inertia\ServiceProvider as InertiaServiceProvider;
 use Laravel\Ai\AiServiceProvider;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\FortifyServiceProvider;
@@ -38,7 +37,6 @@ abstract class TestCase extends BaseTestCase
             FilamentServiceProvider::class,
             SanctumServiceProvider::class,
             FortifyServiceProvider::class,
-            InertiaServiceProvider::class,
             PermissionServiceProvider::class,
             MinishopServiceProvider::class,
             MinishopPanelProvider::class,
@@ -79,8 +77,6 @@ abstract class TestCase extends BaseTestCase
             __DIR__.'/fixtures/views',
             resource_path('views'),
         ]);
-
-        $app['config']->set('inertia.testing.ensure_pages_exist', false);
 
         $app['config']->set('fortify.guard', 'web');
         $app['config']->set('fortify.features', [

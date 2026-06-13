@@ -8,10 +8,17 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
+use Livewire\Livewire;
 use Minishop\Actions\Fortify\CreateNewUser;
 use Minishop\Console\Commands\InstallCommand;
 use Minishop\Http\Responses\LoginResponse;
 use Minishop\Http\Responses\RegisterResponse;
+use Minishop\Livewire\AddressForm;
+use Minishop\Livewire\AddToCart;
+use Minishop\Livewire\CartBadge;
+use Minishop\Livewire\CartPage;
+use Minishop\Livewire\Checkout;
+use Minishop\Livewire\ProductList;
 use Minishop\Models\Category;
 use Minishop\Models\Coupon;
 use Minishop\Models\Order;
@@ -43,7 +50,6 @@ use Minishop\Policies\TagPolicy;
 use Minishop\Policies\TaxZonePolicy;
 use Minishop\Policies\UserPolicy;
 use Minishop\Rendering\BladeRenderer;
-use Minishop\Rendering\InertiaRenderer;
 use Minishop\Rendering\StorefrontRendererContract;
 use Minishop\Services\Shipping\CanadaPostCarrier;
 use Minishop\Services\Shipping\ShippingRateService;
@@ -73,10 +79,9 @@ class MinishopServiceProvider extends ServiceProvider
         $this->app->singleton('minishop.payment', fn ($app) => new PaymentManager($app));
 
         $this->app->singleton(StorefrontRendererContract::class, function ($app) {
-            $driver = config('minishop.renderer', 'inertia');
+            $driver = config('minishop.renderer', 'blade');
 
             return match (true) {
-                $driver === 'inertia' => new InertiaRenderer,
                 $driver === 'blade' => new BladeRenderer,
                 class_exists($driver) => $app->make($driver),
                 default => throw new \InvalidArgumentException("Minishop renderer [{$driver}] is not supported."),
@@ -117,15 +122,33 @@ class MinishopServiceProvider extends ServiceProvider
             __DIR__.'/../resources/views' => resource_path('views/vendor/minishop'),
         ], 'minishop-views');
 
+        // Storefront: let the host override the shipped views and pull in the
+        // Tailwind (v4) entrypoint used to build the storefront assets with Vite.
         $this->publishes([
-            __DIR__.'/../stubs/blade' => resource_path('views/storefront'),
-        ], 'minishop-blade-stubs');
+            __DIR__.'/../resources/views/storefront' => resource_path('views/storefront'),
+            __DIR__.'/../resources/css/storefront.css' => resource_path('css/storefront.css'),
+        ], 'minishop-storefront');
 
+        $this->registerLivewireComponents();
         $this->registerFactoryResolver();
         $this->registerObservers();
         $this->registerPolicies();
         $this->registerShippingService();
         $this->registerSuperAdminGate();
+    }
+
+    protected function registerLivewireComponents(): void
+    {
+        if (! class_exists(Livewire::class)) {
+            return;
+        }
+
+        Livewire::component('minishop.cart-badge', CartBadge::class);
+        Livewire::component('minishop.add-to-cart', AddToCart::class);
+        Livewire::component('minishop.cart-page', CartPage::class);
+        Livewire::component('minishop.product-list', ProductList::class);
+        Livewire::component('minishop.checkout', Checkout::class);
+        Livewire::component('minishop.address-form', AddressForm::class);
     }
 
     protected function registerFactoryResolver(): void

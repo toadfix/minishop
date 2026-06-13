@@ -31,10 +31,8 @@ class AccountOrdersTest extends TestCase
         $this->actingAs($user)
             ->get('/account/orders')
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->component('storefront/Account/Orders/Index')
-                ->has('orders.data', 3)
-            );
+            ->assertViewIs('minishop::storefront.account.orders.index')
+            ->assertViewHas('orders', fn ($orders) => $orders->total() === 3);
     }
 
     public function test_customer_only_sees_their_own_orders(): void
@@ -47,7 +45,7 @@ class AccountOrdersTest extends TestCase
 
         $this->actingAs($userA)
             ->get('/account/orders')
-            ->assertInertia(fn ($page) => $page->has('orders.data', 2));
+            ->assertViewHas('orders', fn ($orders) => $orders->total() === 2);
     }
 
     public function test_customer_can_view_their_own_order(): void
@@ -58,7 +56,7 @@ class AccountOrdersTest extends TestCase
         $this->actingAs($user)
             ->get("/account/orders/{$order->order_number}")
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->component('storefront/Account/Orders/Show'));
+            ->assertViewIs('minishop::storefront.account.orders.show');
     }
 
     public function test_customer_cannot_view_another_customers_order(): void

@@ -2,8 +2,9 @@
 
 return [
     /*
-     * Set to true only when the host app has Inertia + Vue configured
-     * and has published the Minishop storefront assets.
+     * Set to true to register the built-in Livewire storefront routes.
+     * Run `php artisan minishop:install` and build the storefront assets
+     * (npm install && npm run build) before enabling this in production.
      */
     'load_storefront_routes' => env('MINISHOP_STOREFRONT', false),
 
@@ -14,10 +15,10 @@ return [
     'image_disk' => env('MINISHOP_IMAGE_DISK', 'public'),
 
     /*
-     * The storefront renderer to use. Built-in options: 'inertia', 'blade'.
+     * The storefront renderer to use. Built-in option: 'blade' (Livewire-powered).
      * Pass a FQCN to use a custom renderer implementing StorefrontRendererContract.
      */
-    'renderer' => env('MINISHOP_RENDERER', 'inertia'),
+    'renderer' => env('MINISHOP_RENDERER', 'blade'),
 
     'default_payment_gateway' => env('MINISHOP_DEFAULT_GATEWAY', 'stripe'),
 
