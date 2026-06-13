@@ -31,7 +31,7 @@ class MinishopPanelProvider extends PanelProvider
         return $panel
             ->id('minishop')
             ->path(config('minishop.panel_path', 'dashboard'))
-            ->login(false)
+            ->login()
             ->authGuard('web')
             ->darkMode(true)
             ->resources([

@@ -24,8 +24,23 @@ php artisan minishop:install
 
 This will:
 1. Publish the config file to `config/minishop.php`
-2. Publish and run the migrations
-3. Seed the required roles and permissions
+2. Publish and run the migrations (re-running the installer is safe — already-published migrations are skipped)
+3. Point `AUTH_MODEL` in your `.env` at `Minishop\Models\User` (the model carries the roles, Sanctum and Fortify traits the package needs)
+4. Seed the required roles and permissions
+5. Optionally create an initial admin user with the `super-admin` role (pass `--no-admin` to skip)
+
+The admin panel is available at `/dashboard` and authenticates with Filament's built-in login.
+
+### Local package development
+
+If you are working on the package itself, `scripts/fresh-host.sh` scaffolds a
+throwaway Laravel host app as a sibling directory, wires the package in via a
+Composer path repository (symlinked, so edits are live) and runs the installer:
+
+```bash
+scripts/fresh-host.sh            # creates ../minishop-app
+scripts/fresh-host.sh ../sandbox # or a directory of your choosing
+```
 
 ### Inertia storefront (optional)
 

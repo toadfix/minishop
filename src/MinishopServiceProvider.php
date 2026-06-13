@@ -88,7 +88,9 @@ class MinishopServiceProvider extends ServiceProvider
     {
         EncryptCookies::except('cart_token');
 
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        if ($this->app->runningUnitTests()) {
+            $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        }
         $this->publishesMigrations([
             __DIR__.'/../database/migrations' => database_path('migrations'),
         ], 'minishop-migrations');
