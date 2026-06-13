@@ -11,7 +11,7 @@ use Spatie\Permission\Models\Role;
 class InstallCommand extends Command
 {
     protected $signature = 'minishop:install
-        {--renderer=inertia : The storefront renderer to use (inertia|blade)}
+        {--storefront : Publish the Livewire storefront views and frontend assets}
         {--no-admin : Skip creating the initial admin user}';
 
     protected $description = 'Publish and set up the Minishop ecommerce package';
@@ -48,13 +48,12 @@ class InstallCommand extends Command
 
         $this->publishFilamentAssets();
 
-        if ($this->option('renderer') === 'blade') {
+        if ($this->option('storefront')) {
             $this->call('vendor:publish', [
-                '--tag' => 'minishop-blade-stubs',
+                '--tag' => 'minishop-storefront',
                 '--force' => false,
             ]);
-            $this->line('  Blade view stubs published to <fg=cyan>resources/views/storefront/</>.');
-            $this->line('  Set <fg=yellow>MINISHOP_RENDERER=blade</> in your .env.');
+            $this->line('  Storefront views + assets published.');
         }
 
         $this->newLine();
@@ -65,6 +64,13 @@ class InstallCommand extends Command
         $this->line('  2. Add Stripe keys to .env: <fg=yellow>STRIPE_KEY</>, <fg=yellow>STRIPE_SECRET</>, <fg=yellow>STRIPE_WEBHOOK_SECRET</>.');
         $this->line('  3. Visit <fg=cyan>/dashboard</> — Filament admin panel is ready.');
         $this->line('  4. API base URL: <fg=cyan>/api/v1/</>.');
+
+        if ($this->option('storefront')) {
+            $this->line('  5. Set <fg=yellow>MINISHOP_STOREFRONT=true</> in your .env.');
+            $this->line('  6. Build storefront assets: <fg=cyan>npm install && npm run build</>.');
+        } else {
+            $this->line('  5. Storefront is optional — re-run with <fg=yellow>--storefront</> to publish it.');
+        }
         $this->newLine();
 
         return self::SUCCESS;

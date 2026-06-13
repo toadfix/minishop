@@ -15,7 +15,7 @@ class HomeTest extends TestCase
     {
         $this->get(route('home'))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->component('storefront/Home'));
+            ->assertViewIs('minishop::storefront.home');
     }
 
     public function test_home_page_passes_featured_products(): void
@@ -23,7 +23,7 @@ class HomeTest extends TestCase
         Product::factory(3)->create();
 
         $this->get(route('home'))
-            ->assertInertia(fn ($page) => $page->has('featuredProducts', 3));
+            ->assertViewHas('featuredProducts', fn ($products) => $products->count() === 3);
     }
 
     public function test_home_page_excludes_inactive_products(): void
@@ -32,7 +32,7 @@ class HomeTest extends TestCase
         Product::factory(2)->inactive()->create();
 
         $this->get(route('home'))
-            ->assertInertia(fn ($page) => $page->has('featuredProducts', 2));
+            ->assertViewHas('featuredProducts', fn ($products) => $products->count() === 2);
     }
 
     public function test_home_page_limits_featured_products_to_eight(): void
@@ -40,7 +40,7 @@ class HomeTest extends TestCase
         Product::factory(12)->create();
 
         $this->get(route('home'))
-            ->assertInertia(fn ($page) => $page->has('featuredProducts', 8));
+            ->assertViewHas('featuredProducts', fn ($products) => $products->count() === 8);
     }
 
     public function test_home_page_passes_active_categories(): void
@@ -49,7 +49,7 @@ class HomeTest extends TestCase
         Category::factory()->create(['is_active' => false, 'parent_id' => null]);
 
         $this->get(route('home'))
-            ->assertInertia(fn ($page) => $page->has('categories', 1));
+            ->assertViewHas('categories', fn ($categories) => $categories->count() === 1);
     }
 
     public function test_home_page_excludes_child_categories_from_top_level(): void
@@ -58,6 +58,6 @@ class HomeTest extends TestCase
         Category::factory()->create(['is_active' => true, 'parent_id' => $parent->id]);
 
         $this->get(route('home'))
-            ->assertInertia(fn ($page) => $page->has('categories', 1));
+            ->assertViewHas('categories', fn ($categories) => $categories->count() === 1);
     }
 }

@@ -29,7 +29,7 @@ class AccountAddressTest extends TestCase
         $this->actingAs($user)
             ->get('/account/address')
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->component('storefront/Account/Address/Edit'));
+            ->assertViewIs('minishop::storefront.account.address.edit');
     }
 
     public function test_customer_can_save_a_billing_address(): void

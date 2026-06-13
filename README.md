@@ -1,6 +1,6 @@
 # Minishop
 
-A drop-in ecommerce package for Laravel 13 applications. Ships with a Filament v5 admin panel, a pluggable Inertia/Blade storefront, Stripe payments, a Sanctum REST API, and Canadian tax/shipping support.
+A drop-in ecommerce package for Laravel 13 applications. Ships with a Filament v5 admin panel, a Livewire storefront, Stripe payments, a Sanctum REST API, and Canadian tax/shipping support.
 
 ---
 
@@ -42,12 +42,13 @@ scripts/fresh-host.sh            # creates ../minishop-app
 scripts/fresh-host.sh ../sandbox # or a directory of your choosing
 ```
 
-### Inertia storefront (optional)
+### Livewire storefront (optional)
 
-If your host app uses Inertia + Vue, enable the built-in storefront:
+The package ships a complete Livewire + Blade storefront (home, products,
+cart, checkout, and customer account). Publish it and enable the routes:
 
 ```bash
-php artisan minishop:install --renderer=inertia
+php artisan minishop:install --storefront
 ```
 
 Add to your `.env`:
@@ -56,28 +57,23 @@ Add to your `.env`:
 MINISHOP_STOREFRONT=true
 ```
 
-Then regenerate Wayfinder action files (if you use [Laravel Wayfinder](https://github.com/laravel/wayfinder)):
+The storefront is styled with Tailwind v4. Build the assets with your app's
+Vite setup:
 
 ```bash
-php artisan wayfinder:generate
+npm install
+npm run build
 ```
 
-### Blade storefront (optional)
+`minishop:install --storefront` publishes:
 
-If your app uses Blade instead of Inertia:
+- `resources/views/storefront/` — the page views (override any of them freely).
+- `resources/css/storefront.css` — the Tailwind entrypoint. Add it to your
+  `vite.config.js` inputs (alongside your existing CSS) and reference it with
+  `@vite(['resources/css/storefront.css'])` — the shipped layout already does.
 
-```bash
-php artisan minishop:install --renderer=blade
-```
-
-Add to your `.env`:
-
-```env
-MINISHOP_STOREFRONT=true
-MINISHOP_RENDERER=blade
-```
-
-Blade view stubs are published to `resources/views/storefront/`.
+Until the assets are built, the layout falls back to the Tailwind Play CDN so
+the storefront is usable out of the box.
 
 ---
 
@@ -88,7 +84,7 @@ The published config file is at `config/minishop.php`. Key options:
 | Key | Env variable | Default | Description |
 |-----|-------------|---------|-------------|
 | `load_storefront_routes` | `MINISHOP_STOREFRONT` | `false` | Enable the built-in storefront routes |
-| `renderer` | `MINISHOP_RENDERER` | `inertia` | Storefront renderer: `inertia`, `blade`, or a custom FQCN |
+| `renderer` | `MINISHOP_RENDERER` | `blade` | Storefront renderer: `blade` (Livewire) or a custom FQCN |
 | `default_payment_gateway` | `MINISHOP_DEFAULT_GATEWAY` | `stripe` | Default payment driver |
 | `panel_path` | `MINISHOP_PANEL_PATH` | `dashboard` | URL path for the Filament admin panel |
 | `image_disk` | `MINISHOP_IMAGE_DISK` | `public` | Filesystem disk for product images |
@@ -103,7 +99,7 @@ Add these to your `.env` as needed:
 ```env
 # Storefront
 MINISHOP_STOREFRONT=true
-MINISHOP_RENDERER=inertia
+MINISHOP_RENDERER=blade
 
 # Stripe
 STRIPE_KEY=pk_live_...
@@ -246,7 +242,9 @@ interface PaymentGatewayContract
 
 ## Custom Storefront Renderer
 
-To use your own frontend (React, Livewire, etc.), implement `Minishop\Rendering\StorefrontRendererContract` and set the FQCN in your config:
+To use your own frontend (React, Inertia, etc.) instead of the built-in
+Livewire storefront, implement `Minishop\Rendering\StorefrontRendererContract`
+and set the FQCN in your config:
 
 ```env
 MINISHOP_RENDERER=App\Rendering\ReactRenderer
@@ -260,7 +258,7 @@ class ReactRenderer implements StorefrontRendererContract
     public function render(string $view, array $data = []): mixed
     {
         // $view is a slash-separated path, e.g. 'storefront/Products/Index'
-        return Inertia::render($view, $data); // or your own adapter
+        return inertia($view, $data); // or your own adapter
     }
 }
 ```

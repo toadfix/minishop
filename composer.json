@@ -12,18 +12,15 @@
         "laravel/fortify": "^1.0",
         "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.0",
+        "livewire/livewire": "^4.0",
         "spatie/laravel-permission": "^7.2",
         "stripe/stripe-php": "^19.3"
-    },
-    "suggest": {
-        "inertiajs/inertia-laravel": "Required only if enabling the built-in Inertia storefront (MINISHOP_STOREFRONT=true)"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
         "orchestra/testbench": "^11.0",
         "phpunit/phpunit": "^12.0",
-        "laravel/pint": "^1.24",
-        "inertiajs/inertia-laravel": "^2.0"
+        "laravel/pint": "^1.24"
     },
     "autoload": {
         "psr-4": {

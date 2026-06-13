@@ -29,11 +29,9 @@ class AccountDashboardTest extends TestCase
         $this->actingAs($user)
             ->get('/account')
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->component('storefront/Account/Dashboard')
-                ->has('recentOrders')
-                ->has('totalOrders')
-            );
+            ->assertViewIs('minishop::storefront.account.dashboard')
+            ->assertViewHas('recentOrders')
+            ->assertViewHas('totalOrders');
     }
 
     public function test_admin_cannot_access_customer_account_area(): void

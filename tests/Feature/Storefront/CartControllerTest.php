@@ -24,7 +24,7 @@ class CartControllerTest extends TestCase
     {
         $this->get(route('storefront.cart.show'))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->component('storefront/Cart'));
+            ->assertViewIs('minishop::storefront.cart');
     }
 
     public function test_guest_can_add_item_to_cart(): void

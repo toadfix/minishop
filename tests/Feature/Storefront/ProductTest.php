@@ -17,7 +17,7 @@ class ProductTest extends TestCase
     {
         $this->get(route('storefront.products.index'))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->component('storefront/Products/Index'));
+            ->assertViewIs('minishop::storefront.products.index');
     }
 
     public function test_products_index_only_shows_active_products(): void
@@ -26,7 +26,7 @@ class ProductTest extends TestCase
         Product::factory(2)->inactive()->create();
 
         $this->get(route('storefront.products.index'))
-            ->assertInertia(fn ($page) => $page->has('products.data', 3));
+            ->assertViewHas('products', fn ($products) => $products->total() === 3);
     }
 
     public function test_products_index_can_filter_by_category_slug(): void
@@ -37,7 +37,7 @@ class ProductTest extends TestCase
         Product::factory()->create();
 
         $this->get(route('storefront.products.index', ['category' => 'apparel']))
-            ->assertInertia(fn ($page) => $page->has('products.data', 1));
+            ->assertViewHas('products', fn ($products) => $products->total() === 1);
     }
 
     public function test_products_index_can_search_by_name(): void
@@ -46,18 +46,15 @@ class ProductTest extends TestCase
         Product::factory()->create(['name' => 'Blue T-Shirt']);
 
         $this->get(route('storefront.products.index', ['search' => 'Ceramic']))
-            ->assertInertia(fn ($page) => $page->has('products.data', 1));
+            ->assertViewHas('products', fn ($products) => $products->total() === 1);
     }
 
     public function test_products_index_passes_categories_and_filters(): void
     {
         $this->get(route('storefront.products.index', ['category' => 'home', 'search' => 'mug']))
             ->assertOk()
-            ->assertInertia(function ($page) {
-                $page->has('categories')
-                    ->where('filters.category', 'home')
-                    ->where('filters.search', 'mug');
-            });
+            ->assertViewHas('categories')
+            ->assertViewHas('filters', fn ($filters) => $filters['category'] === 'home' && $filters['search'] === 'mug');
     }
 
     public function test_products_index_can_be_filtered_by_price_min(): void
@@ -67,7 +64,7 @@ class ProductTest extends TestCase
         Product::factory()->create(['name' => 'Expensive', 'price' => 5000]);
 
         $this->get(route('storefront.products.index', ['price_min' => '15']))
-            ->assertInertia(fn ($page) => $page->has('products.data', 2));
+            ->assertViewHas('products', fn ($products) => $products->total() === 2);
     }
 
     public function test_products_index_can_be_filtered_by_price_max(): void
@@ -77,7 +74,7 @@ class ProductTest extends TestCase
         Product::factory()->create(['name' => 'Expensive', 'price' => 5000]);
 
         $this->get(route('storefront.products.index', ['price_max' => '20']))
-            ->assertInertia(fn ($page) => $page->has('products.data', 2));
+            ->assertViewHas('products', fn ($products) => $products->total() === 2);
     }
 
     public function test_products_index_can_be_filtered_by_price_range(): void
@@ -87,7 +84,7 @@ class ProductTest extends TestCase
         Product::factory()->create(['name' => 'Expensive', 'price' => 5000]);
 
         $this->get(route('storefront.products.index', ['price_min' => '15', 'price_max' => '25']))
-            ->assertInertia(fn ($page) => $page->has('products.data', 1));
+            ->assertViewHas('products', fn ($products) => $products->total() === 1);
     }
 
     public function test_products_index_can_be_filtered_by_stock_in_stock(): void
@@ -96,10 +93,7 @@ class ProductTest extends TestCase
         Product::factory()->simple()->create(['name' => 'Sold Out', 'stock_quantity' => 0]);
 
         $this->get(route('storefront.products.index', ['stock' => 'in_stock']))
-            ->assertInertia(fn ($page) => $page
-                ->has('products.data', 1)
-                ->where('products.data.0.name', 'Available')
-            );
+            ->assertViewHas('products', fn ($products) => $products->total() === 1 && $products->first()->name === 'Available');
     }
 
     public function test_products_index_can_be_filtered_by_stock_out_of_stock(): void
@@ -108,10 +102,7 @@ class ProductTest extends TestCase
         Product::factory()->simple()->create(['name' => 'Sold Out', 'stock_quantity' => 0]);
 
         $this->get(route('storefront.products.index', ['stock' => 'out_of_stock']))
-            ->assertInertia(fn ($page) => $page
-                ->has('products.data', 1)
-                ->where('products.data.0.name', 'Sold Out')
-            );
+            ->assertViewHas('products', fn ($products) => $products->total() === 1 && $products->first()->name === 'Sold Out');
     }
 
     public function test_products_index_stock_filter_excludes_bundled_products(): void
@@ -120,10 +111,7 @@ class ProductTest extends TestCase
         Product::factory()->bundledEmpty()->create(['name' => 'Bundle', 'stock_quantity' => 0]);
 
         $this->get(route('storefront.products.index', ['stock' => 'out_of_stock']))
-            ->assertInertia(fn ($page) => $page
-                ->has('products.data', 1)
-                ->where('products.data.0.name', 'Simple Out')
-            );
+            ->assertViewHas('products', fn ($products) => $products->total() === 1 && $products->first()->name === 'Simple Out');
     }
 
     public function test_products_index_search_includes_description(): void
@@ -132,18 +120,16 @@ class ProductTest extends TestCase
         Product::factory()->create(['name' => 'Gadget', 'description' => 'A leather wallet']);
 
         $this->get(route('storefront.products.index', ['search' => 'ceramic bowl']))
-            ->assertInertia(fn ($page) => $page->has('products.data', 1));
+            ->assertViewHas('products', fn ($products) => $products->total() === 1);
     }
 
     public function test_products_index_passes_new_filter_params_to_view(): void
     {
         $this->get(route('storefront.products.index', ['price_min' => '10', 'price_max' => '50', 'stock' => 'in_stock']))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->where('filters.price_min', '10')
-                ->where('filters.price_max', '50')
-                ->where('filters.stock', 'in_stock')
-            );
+            ->assertViewHas('filters', fn ($filters) => $filters['price_min'] === '10'
+                && $filters['price_max'] === '50'
+                && $filters['stock'] === 'in_stock');
     }
 
     public function test_product_show_renders_for_active_product(): void
@@ -152,10 +138,8 @@ class ProductTest extends TestCase
 
         $this->get(route('storefront.products.show', $product))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->component('storefront/Products/Show')
-                ->where('product.slug', $product->slug)
-            );
+            ->assertViewIs('minishop::storefront.products.show')
+            ->assertViewHas('product', fn ($p) => $p->slug === $product->slug);
     }
 
     public function test_inactive_product_returns_404(): void
@@ -184,9 +168,7 @@ class ProductTest extends TestCase
 
         $this->get(route('storefront.products.show', $product))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->has('product.variants.0.images', 1)
-            );
+            ->assertViewHas('product', fn ($p) => $p->variants->first()->images->count() === 1);
     }
 
     public function test_product_show_includes_seo_meta_fields(): void
@@ -198,10 +180,8 @@ class ProductTest extends TestCase
 
         $this->get(route('storefront.products.show', $product))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->where('product.meta_title', 'Custom SEO Title')
-                ->where('product.meta_description', 'A custom meta description for search engines.')
-            );
+            ->assertViewHas('product', fn ($p) => $p->meta_title === 'Custom SEO Title'
+                && $p->meta_description === 'A custom meta description for search engines.');
     }
 
     public function test_product_show_related_products_appear_with_correct_slugs(): void
@@ -213,11 +193,9 @@ class ProductTest extends TestCase
 
         $this->get(route('storefront.products.show', $product))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->has('product.related_products', 2)
-                ->where('product.related_products.0.slug', $related1->slug)
-                ->where('product.related_products.1.slug', $related2->slug)
-            );
+            ->assertViewHas('product', fn ($p) => $p->relatedProducts->count() === 2
+                && $p->relatedProducts->pluck('slug')->contains($related1->slug)
+                && $p->relatedProducts->pluck('slug')->contains($related2->slug));
     }
 
     public function test_product_show_excludes_inactive_related_products(): void
@@ -229,10 +207,8 @@ class ProductTest extends TestCase
 
         $this->get(route('storefront.products.show', $product))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->has('product.related_products', 1)
-                ->where('product.related_products.0.id', $activeRelated->id)
-            );
+            ->assertViewHas('product', fn ($p) => $p->relatedProducts->count() === 1
+                && $p->relatedProducts->first()->id === $activeRelated->id);
     }
 
     public function test_product_show_limits_related_products_to_eight(): void
@@ -243,9 +219,7 @@ class ProductTest extends TestCase
 
         $this->get(route('storefront.products.show', $product))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->has('product.related_products', 8)
-            );
+            ->assertViewHas('product', fn ($p) => $p->relatedProducts->count() === 8);
     }
 
     public function test_product_show_has_no_related_products_when_none_added(): void
@@ -254,9 +228,7 @@ class ProductTest extends TestCase
 
         $this->get(route('storefront.products.show', $product))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->has('product.related_products', 0)
-            );
+            ->assertViewHas('product', fn ($p) => $p->relatedProducts->count() === 0);
     }
 
     public function test_product_show_images_only_contains_product_level_images(): void
@@ -269,8 +241,6 @@ class ProductTest extends TestCase
 
         $this->get(route('storefront.products.show', $product))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->has('product.images', 1)
-            );
+            ->assertViewHas('product', fn ($p) => $p->images->count() === 1);
     }
 }
