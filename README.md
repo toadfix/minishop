@@ -134,20 +134,23 @@ MINISHOP_LOW_STOCK_EMAIL=store@example.com
 The Filament admin panel is available at `/dashboard` (or the path configured in `MINISHOP_PANEL_PATH`).
 
 **Available panels:**
-- Products — full CRUD, variants, images, tags, categories, bulk actions, CSV/PDF export
-- Orders — lifecycle management, invoice PDF generation, bulk status updates
+- Products — full CRUD with options, variants, and images (managed inline as relation managers); bulk delete
+- Categories & Tags — full CRUD
+- Orders — lifecycle management, bulk status updates, and downloadable invoice PDFs (also emailed to the customer on confirmation)
 - Customers — profiles and order history
 - Coupons — percentage and fixed discounts with expiry and usage limits
-- Returns — approve/reject/refund workflow
+- Shipping Methods — flat-rate and carrier-calculated methods
+- Tax Zones — zone-based tax rates
+- Returns — approve/reject/receive/refund workflow
 - Users — admin user management with roles
-- Settings — currency, tax rate, shipping methods, payment gateway configuration
+- Settings — currency & locale, tax rate/mode, GST number, active payment gateway, inventory and promotion options
 - Activity Log — admin action history
 
 **Roles included:**
-- `super-admin` — full access
-- `admin` — full access except user management
-- `manager` — read/write orders and products
-- `customer` — assigned automatically on storefront registration
+- `super-admin` — full access (bypasses all permission checks)
+- `admin` — full management of every resource, including users
+- `manager` — products and orders (no deletes), returns processing, and read access to categories/customers/tax zones/tags; no user, coupon, shipping, or settings management
+- `customer` — assigned automatically on storefront registration; no admin access
 
 ---
 
@@ -163,27 +166,32 @@ When `MINISHOP_STOREFRONT=true`, the following routes are registered:
 | GET | `/cart` | `storefront.cart.show` |
 | GET | `/checkout` | `storefront.checkout.create` |
 | POST | `/checkout` | `storefront.checkout.store` |
-| GET | `/checkout/confirmation/{order}` | `storefront.checkout.confirmation` |
-| GET | `/checkout/payment/{order}` | `storefront.checkout.payment.show` |
+| GET | `/order-confirmation/{order}` | `storefront.order.confirmation` |
+| GET | `/checkout/pay/{order}` | `storefront.checkout.payment.show` |
+| POST | `/checkout/pay/{order}/stripe` | `storefront.checkout.payment.stripe` |
 | POST | `/webhooks/stripe` | `webhooks.stripe` |
 | POST | `/webhooks/{gateway}` | `webhooks.gateway` |
+
+The cart is also driven by JSON sub-routes (`storefront.cart.items.store`,
+`.items.update`, `.items.destroy`, `.clear`, `.sync`) used by the Livewire
+components.
 
 Account routes (require authentication):
 
 | Method | URI | Name |
 |--------|-----|------|
-| GET | `/account` | `storefront.account.dashboard` |
-| GET | `/account/orders` | `storefront.account.orders.index` |
-| GET | `/account/orders/{order}` | `storefront.account.orders.show` |
-| GET | `/account/address` | `storefront.account.address.edit` |
-| PUT | `/account/address` | `storefront.account.address.update` |
-| GET | `/account/payment` | `storefront.account.payment.index` |
+| GET | `/account` | `account.dashboard` |
+| GET | `/account/orders` | `account.orders.index` |
+| GET | `/account/orders/{order}` | `account.orders.show` |
+| GET | `/account/address` | `account.address.edit` |
+| PUT | `/account/address` | `account.address.update` |
+| GET | `/account/payment` | `account.payment.index` |
 
 ---
 
 ## REST API
 
-The Sanctum API is available at `/api/v1/`. All routes except authentication require a bearer token.
+The Sanctum API is available at `/api/v1/`. Catalog and cart endpoints are public; orders and the authenticated-user endpoint require a bearer token.
 
 **Authentication:**
 
@@ -194,7 +202,28 @@ POST /api/v1/auth/logout
 GET  /api/v1/user
 ```
 
-**Orders:**
+**Catalog (public):**
+
+```http
+GET /api/v1/products
+GET /api/v1/products/{product}
+GET /api/v1/categories
+GET /api/v1/categories/{category}
+POST /api/v1/coupons/validate
+```
+
+Product responses include each image's resolved `url` (and raw `path`).
+
+**Cart:**
+
+```http
+GET    /api/v1/cart
+POST   /api/v1/cart/items
+PATCH  /api/v1/cart/items/{cartItem}
+DELETE /api/v1/cart/items/{cartItem}
+```
+
+**Orders (require a bearer token):**
 
 ```http
 GET /api/v1/orders
@@ -254,35 +283,40 @@ interface PaymentGatewayContract
 
 ## Custom Storefront Renderer
 
-To use your own frontend (React, Inertia, etc.) instead of the built-in
-Livewire storefront, implement `Minishop\Rendering\StorefrontRendererContract`
-and set the FQCN in your config:
+To use your own frontend (Inertia, a custom Blade theme, an SPA API bridge,
+etc.) instead of the built-in Livewire storefront, implement
+`Minishop\Rendering\StorefrontRendererContract` and set the FQCN in your config:
 
 ```env
-MINISHOP_RENDERER=App\Rendering\ReactRenderer
+MINISHOP_RENDERER=App\Rendering\CustomRenderer
 ```
 
 ```php
 use Minishop\Rendering\StorefrontRendererContract;
 
-class ReactRenderer implements StorefrontRendererContract
+class CustomRenderer implements StorefrontRendererContract
 {
     public function render(string $view, array $data = []): mixed
     {
-        // $view is a slash-separated path, e.g. 'storefront/Products/Index'
-        return inertia($view, $data); // or your own adapter
+        // $view is a slash-separated path, e.g. 'storefront/Products/Index'.
+        // Map it to your own templates, an Inertia page, an API payload, etc.
+        return view('shop.'.str_replace('/', '.', strtolower($view)), $data);
     }
 }
 ```
+
+> The package no longer ships an Inertia renderer — the default (and only
+> built-in) renderer is `blade`, which powers the Livewire storefront. A custom
+> renderer is only needed if you are replacing that frontend entirely.
 
 ---
 
 ## Seeders
 
-To seed demo data (categories, products, shipping methods, Canadian tax zones, sample orders):
+To seed demo data (roles, categories, products, shipping methods, Canadian tax zones, coupons, sample orders), run the package's aggregate seeder — `php artisan db:seed` alone runs your host app's `DatabaseSeeder`, not Minishop's:
 
 ```bash
-php artisan db:seed
+php artisan db:seed --class="Minishop\Database\Seeders\MinishopSeeder"
 ```
 
 To seed only roles and permissions (required for the app to function):
