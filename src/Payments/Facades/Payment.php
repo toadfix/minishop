@@ -8,6 +8,7 @@ use Minishop\Payments\PaymentManager;
 /**
  * @method static \Minishop\Payments\Contracts\PaymentGatewayContract driver(string $driver = null)
  * @method static void extend(string $driver, \Closure $callback)
+ * @method static array<string, string> availableGateways()
  *
  * @see PaymentManager
  */

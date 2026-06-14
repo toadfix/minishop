@@ -12,6 +12,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Minishop\Filament\Pages\ManageStoreSettings;
 use Minishop\Filament\Resources\ActivityLogResource;
 use Minishop\Filament\Resources\CategoryResource;
 use Minishop\Filament\Resources\CouponResource;
@@ -46,6 +47,9 @@ class MinishopPanelProvider extends PanelProvider
                 OrderResource::class,
                 OrderReturnResource::class,
                 ActivityLogResource::class,
+            ])
+            ->pages([
+                ManageStoreSettings::class,
             ])
             ->middleware([
                 EncryptCookies::class,
