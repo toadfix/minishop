@@ -2,6 +2,10 @@
 
 namespace Minishop\Filament\Resources;
 
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -9,14 +13,12 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Actions\BulkAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Minishop\Actions\GenerateInvoicePdf;
 use Minishop\Enums\OrderStatus;
 use Minishop\Filament\Resources\OrderResource\Pages;
 use Minishop\Filament\Resources\OrderResource\RelationManagers\ItemsRelationManager;
@@ -214,6 +216,15 @@ class OrderResource extends Resource
             ])
             ->actions([
                 ViewAction::make(),
+                Action::make('invoice')
+                    ->label('Invoice')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->visible(fn (Order $record) => auth()->user()?->can('invoice', $record))
+                    ->action(fn (Order $record) => response()->streamDownload(
+                        fn () => print (app(GenerateInvoicePdf::class)->execute($record)),
+                        app(GenerateInvoicePdf::class)->filename($record),
+                        ['Content-Type' => 'application/pdf'],
+                    )),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
