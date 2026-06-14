@@ -11,9 +11,7 @@
 
     <div class="grid gap-10 lg:grid-cols-2">
         <div class="aspect-square overflow-hidden rounded-2xl bg-gray-100">
-            @if ($product->images->isNotEmpty())
-                <img src="{{ $product->images->first()->url }}" alt="{{ $product->name }}" class="h-full w-full object-cover">
-            @endif
+            @include('minishop::storefront.partials.product-image', ['product' => $product, 'class' => 'h-full w-full object-cover'])
         </div>
 
         <div>
@@ -47,10 +45,7 @@
                 @foreach ($product->relatedProducts as $related)
                     <a href="{{ route('storefront.products.show', $related) }}" class="group">
                         <div class="aspect-square overflow-hidden rounded-lg bg-gray-100">
-                            @if ($related->images->isNotEmpty())
-                                <img src="{{ $related->images->first()->url }}" alt="{{ $related->name }}"
-                                     class="h-full w-full object-cover transition group-hover:scale-105">
-                            @endif
+                            @include('minishop::storefront.partials.product-image', ['product' => $related, 'class' => 'h-full w-full object-cover transition group-hover:scale-105'])
                         </div>
                         <p class="mt-2 text-sm font-medium text-gray-900">{{ $related->name }}</p>
                         <p class="text-sm text-gray-500">{{ \Minishop\Support\Money::format($related->price) }}</p>

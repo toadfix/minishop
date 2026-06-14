@@ -34,7 +34,7 @@ class ProductImage extends Model
     protected function url(): Attribute
     {
         return Attribute::make(
-            get: fn () => Storage::url($this->attributes['path']),
+            get: fn () => Storage::disk(config('minishop.image_disk'))->url($this->attributes['path']),
         );
     }
 

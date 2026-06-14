@@ -8,6 +8,7 @@ use Minishop\Filament\Resources\CustomerResource;
 use Minishop\Filament\Resources\OrderResource;
 use Minishop\Filament\Resources\OrderReturnResource;
 use Minishop\Filament\Resources\ProductResource;
+use Minishop\Filament\Resources\ProductResource\RelationManagers\ImagesRelationManager;
 use Minishop\Filament\Resources\ProductResource\RelationManagers\OptionsRelationManager;
 use Minishop\Filament\Resources\ProductResource\RelationManagers\VariantsRelationManager;
 use Minishop\Tests\TestCase;
@@ -48,10 +49,10 @@ class ResourceConfigurationTest extends TestCase
         }
     }
 
-    public function test_product_resource_registers_option_and_variant_relation_managers(): void
+    public function test_product_resource_registers_its_relation_managers(): void
     {
         $this->assertSame(
-            [OptionsRelationManager::class, VariantsRelationManager::class],
+            [OptionsRelationManager::class, VariantsRelationManager::class, ImagesRelationManager::class],
             ProductResource::getRelations(),
         );
     }
