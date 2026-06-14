@@ -48,4 +48,23 @@ class ProductImageTest extends TestCase
 
         Storage::disk('images_test')->assertMissing('products/photo.jpg');
     }
+
+    public function test_deleting_a_single_image_removes_its_file_from_the_configured_disk(): void
+    {
+        Storage::fake('images_test');
+        config(['minishop.image_disk' => 'images_test']);
+
+        Storage::disk('images_test')->put('products/solo.jpg', 'binary');
+
+        $product = Product::factory()->create();
+        $image = ProductImage::factory()->create([
+            'product_id' => $product->id,
+            'path' => 'products/solo.jpg',
+        ]);
+
+        $image->delete();
+
+        Storage::disk('images_test')->assertMissing('products/solo.jpg');
+        $this->assertDatabaseMissing('product_images', ['id' => $image->id]);
+    }
 }
