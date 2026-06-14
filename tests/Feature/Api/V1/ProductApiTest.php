@@ -4,6 +4,7 @@ namespace Minishop\Tests\Feature\Api\V1;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Minishop\Models\Product;
+use Minishop\Models\ProductImage;
 use Minishop\Tests\TestCase;
 
 class ProductApiTest extends TestCase
@@ -52,6 +53,21 @@ class ProductApiTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('data.slug', $product->slug)
             ->assertJsonPath('data.name', 'My Widget');
+    }
+
+    public function test_product_images_expose_a_resolved_url(): void
+    {
+        $product = Product::factory()->create();
+        ProductImage::factory()->create([
+            'product_id' => $product->id,
+            'variant_id' => null,
+            'path' => 'products/widget.jpg',
+        ]);
+
+        $this->getJson("/api/v1/products/{$product->slug}")
+            ->assertOk()
+            ->assertJsonPath('data.images.0.path', 'products/widget.jpg')
+            ->assertJsonPath('data.images.0.url', fn ($url) => is_string($url) && str_contains($url, 'products/widget.jpg'));
     }
 
     public function test_inactive_product_returns_404(): void
