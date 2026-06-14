@@ -4,9 +4,11 @@ namespace Minishop\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Minishop\Actions\GenerateInvoicePdf;
 use Minishop\Models\Order;
 use Minishop\Models\StoreSettings;
 
@@ -34,5 +36,18 @@ class OrderConfirmationMail extends Mailable
                 'currency' => $settings->currency,
             ],
         );
+    }
+
+    /**
+     * @return array<int, Attachment>
+     */
+    public function attachments(): array
+    {
+        $invoice = app(GenerateInvoicePdf::class);
+
+        return [
+            Attachment::fromData(fn () => $invoice->execute($this->order), $invoice->filename($this->order))
+                ->withMime('application/pdf'),
+        ];
     }
 }

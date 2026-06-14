@@ -2,6 +2,7 @@
 
 namespace Minishop\Tests;
 
+use Barryvdh\DomPDF\ServiceProvider as DomPDFServiceProvider;
 use Filament\FilamentServiceProvider;
 use Laravel\Ai\AiServiceProvider;
 use Laravel\Fortify\Features;
@@ -38,6 +39,7 @@ abstract class TestCase extends BaseTestCase
             SanctumServiceProvider::class,
             FortifyServiceProvider::class,
             PermissionServiceProvider::class,
+            DomPDFServiceProvider::class,
             MinishopServiceProvider::class,
             MinishopPanelProvider::class,
         ];
