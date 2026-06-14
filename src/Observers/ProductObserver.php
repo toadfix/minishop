@@ -46,7 +46,7 @@ class ProductObserver
     public function deleting(Product $product): void
     {
         foreach ($product->allImages as $image) {
-            Storage::disk('public')->delete($image->path);
+            Storage::disk(config('minishop.image_disk'))->delete($image->path);
         }
     }
 

@@ -35,10 +35,7 @@
                 @foreach ($featuredProducts as $product)
                     <a href="{{ route('storefront.products.show', $product) }}" class="group">
                         <div class="aspect-square overflow-hidden rounded-lg bg-gray-100">
-                            @if ($product->images->isNotEmpty())
-                                <img src="{{ $product->images->first()->url }}" alt="{{ $product->name }}"
-                                     class="h-full w-full object-cover transition group-hover:scale-105">
-                            @endif
+                            @include('minishop::storefront.partials.product-image', ['product' => $product, 'class' => 'h-full w-full object-cover transition group-hover:scale-105'])
                         </div>
                         <p class="mt-2 text-sm font-medium text-gray-900">{{ $product->name }}</p>
                         <p class="text-sm text-gray-500">{{ \Minishop\Support\Money::format($product->price) }}</p>

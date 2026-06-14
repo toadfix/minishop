@@ -48,6 +48,10 @@ class InstallCommand extends Command
 
         $this->publishFilamentAssets();
 
+        // Product images upload to the configured image disk (default: public),
+        // which is only web-served once the storage symlink exists. Idempotent.
+        $this->call('storage:link');
+
         if ($this->option('storefront')) {
             $this->call('vendor:publish', [
                 '--tag' => 'minishop-storefront',
