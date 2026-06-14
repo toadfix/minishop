@@ -12,6 +12,7 @@ class ProductImageResource extends JsonResource
         return [
             'id' => $this->id,
             'path' => $this->path,
+            'url' => $this->url,
             'alt_text' => $this->alt_text,
             'sort_order' => $this->sort_order,
         ];
