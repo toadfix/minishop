@@ -75,6 +75,18 @@ npm run build
 Until the assets are built, the layout falls back to the Tailwind Play CDN so
 the storefront is usable out of the box.
 
+> **Upgrading:** publishing copies the storefront views into your app, and your
+> copies take precedence over the package's. After upgrading the package, the
+> shipped views may have changed — re-publish to pick up the new versions:
+>
+> ```bash
+> php artisan vendor:publish --tag=minishop-storefront --force
+> ```
+>
+> `--force` overwrites the published views, so re-apply any local edits
+> afterwards (or diff before publishing). If you haven't customised the views,
+> deleting `resources/views/storefront/` and re-publishing is the cleanest path.
+
 ---
 
 ## Configuration
