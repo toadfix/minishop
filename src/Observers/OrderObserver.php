@@ -11,6 +11,25 @@ use Minishop\Models\Order;
 
 class OrderObserver
 {
+    /**
+     * Stamp the fulfilment timestamps as the order moves through shipping, so
+     * both admin edits and bulk status updates record when it happened.
+     */
+    public function saving(Order $order): void
+    {
+        if (! $order->isDirty('status')) {
+            return;
+        }
+
+        if ($order->status === OrderStatus::Shipped && $order->shipped_at === null) {
+            $order->shipped_at = now();
+        }
+
+        if ($order->status === OrderStatus::Delivered && $order->delivered_at === null) {
+            $order->delivered_at = now();
+        }
+    }
+
     public function created(Order $order): void
     {
         ActivityLog::query()->create([
