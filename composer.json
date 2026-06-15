@@ -45,6 +45,11 @@
             }
         }
     },
+    "scripts": {
+        "test": "phpunit tests",
+        "lint": "pint --test",
+        "format": "pint"
+    },
     "minimum-stability": "dev",
     "prefer-stable": true
 }
