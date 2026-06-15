@@ -6,7 +6,7 @@ A drop-in ecommerce package for Laravel 13 applications. Ships with a Filament v
 
 ## Requirements
 
-- PHP 8.2+
+- PHP 8.3+
 - Laravel 13
 - Filament 5
 
