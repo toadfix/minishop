@@ -89,6 +89,16 @@ class Product extends Model
         return $this->belongsToMany(Product::class, 'product_related', 'product_id', 'related_product_id');
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->hasMany(Review::class)->approved()->latest();
+    }
+
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class)->whereNull('variant_id')->orderBy('sort_order');

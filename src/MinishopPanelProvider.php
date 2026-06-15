@@ -20,6 +20,7 @@ use Minishop\Filament\Resources\CustomerResource;
 use Minishop\Filament\Resources\OrderResource;
 use Minishop\Filament\Resources\OrderReturnResource;
 use Minishop\Filament\Resources\ProductResource;
+use Minishop\Filament\Resources\ReviewResource;
 use Minishop\Filament\Resources\ShippingMethodResource;
 use Minishop\Filament\Resources\TagResource;
 use Minishop\Filament\Resources\TaxZoneResource;
@@ -39,6 +40,7 @@ class MinishopPanelProvider extends PanelProvider
                 CategoryResource::class,
                 TagResource::class,
                 ProductResource::class,
+                ReviewResource::class,
                 ShippingMethodResource::class,
                 TaxZoneResource::class,
                 CouponResource::class,

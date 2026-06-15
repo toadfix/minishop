@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Minishop\Http\Controllers\Controller;
 use Minishop\Models\Category;
 use Minishop\Models\Product;
+use Minishop\Models\Review;
 use Minishop\Models\StoreSettings;
 use Minishop\Models\Tag;
 use Minishop\Rendering\StorefrontRendererContract;
@@ -72,7 +73,7 @@ class ProductController extends Controller
         ]);
     }
 
-    public function show(Product $product): mixed
+    public function show(Request $request, Product $product): mixed
     {
         abort_unless($product->is_active, 404);
 
@@ -92,10 +93,21 @@ class ProductController extends Controller
             $product->load(['bundleItems.componentProduct.images', 'bundleItems.componentVariant.optionValues.option']);
         }
 
+        $product->load('approvedReviews.user')
+            ->loadCount('approvedReviews')
+            ->loadAvg('approvedReviews', 'rating');
+
+        $user = $request->user();
+        $userReview = $user
+            ? Review::query()->where('product_id', $product->id)->where('user_id', $user->id)->first()
+            : null;
+
         return $this->renderer->render('storefront/Products/Show', [
             'product' => $product,
             'in_stock' => $product->getEffectiveStock() > 0,
             'sale_discount_percentage' => StoreSettings::current()->sale_discount_percentage ?? 0,
+            'userReview' => $userReview,
+            'canReview' => $user && Review::userMayReview($user, $product),
         ]);
     }
 }

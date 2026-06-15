@@ -38,6 +38,72 @@
         </div>
     </div>
 
+    <section class="mt-16 border-t border-gray-200 pt-10">
+        <div class="flex items-baseline justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">Customer reviews</h2>
+            @if ($product->approved_reviews_count > 0)
+                <div class="text-sm text-gray-600">
+                    @include('minishop::storefront.partials.stars', ['rating' => $product->approved_reviews_avg_rating])
+                    <span class="ml-1">{{ number_format($product->approved_reviews_avg_rating, 1) }} out of 5 ({{ $product->approved_reviews_count }})</span>
+                </div>
+            @endif
+        </div>
+
+        @if (session('status'))
+            <p class="mt-4 rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">{{ session('status') }}</p>
+        @endif
+
+        @if ($canReview)
+            <form method="POST" action="{{ route('storefront.products.reviews.store', $product->slug) }}" class="mt-6 space-y-4 rounded-lg border border-gray-200 bg-white p-6">
+                @csrf
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Rating</label>
+                    <select name="rating" required class="mt-1 block w-32 rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500">
+                        @for ($i = 5; $i >= 1; $i--)<option value="{{ $i }}">{{ $i }} star{{ $i > 1 ? 's' : '' }}</option>@endfor
+                    </select>
+                    @error('rating') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Title <span class="text-gray-400">(optional)</span></label>
+                    <input type="text" name="title" value="{{ old('title') }}" maxlength="255"
+                           class="mt-1 block w-full rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Your review</label>
+                    <textarea name="body" rows="4" required maxlength="2000"
+                              class="mt-1 block w-full rounded-md border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500">{{ old('body') }}</textarea>
+                    @error('body') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <button type="submit" class="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">Submit review</button>
+            </form>
+        @elseif ($userReview)
+            <p class="mt-4 text-sm text-gray-500">
+                @if ($userReview->status === \Minishop\Enums\ReviewStatus::Approved)
+                    You reviewed this product.
+                @else
+                    Your review is {{ $userReview->status->label() }}.
+                @endif
+            </p>
+        @endif
+
+        <div class="mt-8 space-y-6">
+            @forelse ($product->approvedReviews as $review)
+                <article class="border-t border-gray-100 pt-6 first:border-0 first:pt-0">
+                    <div class="flex items-center gap-2">
+                        @include('minishop::storefront.partials.stars', ['rating' => $review->rating])
+                        @if ($review->title)<span class="text-sm font-semibold text-gray-900">{{ $review->title }}</span>@endif
+                    </div>
+                    <p class="mt-2 text-sm text-gray-700">{{ $review->body }}</p>
+                    <p class="mt-2 text-xs text-gray-400">
+                        {{ $review->user->name }} · <span class="text-green-600">Verified purchase</span> · {{ $review->created_at->format('M j, Y') }}
+                    </p>
+                </article>
+            @empty
+                <p class="text-sm text-gray-500">No reviews yet.</p>
+            @endforelse
+        </div>
+    </section>
+
     @if ($product->relatedProducts->isNotEmpty())
         <section class="mt-16">
             <h2 class="text-lg font-semibold text-gray-900">You may also like</h2>
