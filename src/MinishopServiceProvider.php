@@ -107,6 +107,12 @@ class MinishopServiceProvider extends ServiceProvider
     {
         EncryptCookies::except('cart_token');
 
+        // Default Scout to the portable database engine unless the host has
+        // opted into another driver (e.g. SCOUT_DRIVER=meilisearch).
+        if (! env('SCOUT_DRIVER')) {
+            config(['scout.driver' => 'database']);
+        }
+
         // Point Fortify's customer-facing auth pages at the storefront views we
         // ship (the admin panel uses Filament's own login). Fortify's login,
         // registration, password-reset and email-verification features are all

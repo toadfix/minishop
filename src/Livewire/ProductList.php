@@ -5,8 +5,8 @@ namespace Minishop\Livewire;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Minishop\Actions\SearchProducts;
 use Minishop\Models\Category;
-use Minishop\Models\Product;
 
 class ProductList extends Component
 {
@@ -31,22 +31,13 @@ class ProductList extends Component
         $this->resetPage();
     }
 
-    public function render()
+    public function render(SearchProducts $search)
     {
-        $products = Product::query()
-            ->where('is_active', true)
-            ->with(['images'])
-            ->when($this->category !== '', function ($query): void {
-                $query->whereHas('categories', fn ($q) => $q->where('slug', $this->category));
-            })
-            ->when($this->search !== '', function ($query): void {
-                $query->where(function ($q): void {
-                    $q->where('name', 'like', "%{$this->search}%")
-                        ->orWhere('description', 'like', "%{$this->search}%");
-                });
-            })
-            ->latest()
-            ->paginate(24);
+        $products = $search->paginate(
+            ['search' => $this->search, 'category' => $this->category],
+            perPage: 24,
+            tap: fn ($query) => $query->with(['images']),
+        );
 
         $categories = Category::query()
             ->where('is_active', true)

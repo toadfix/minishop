@@ -8,13 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Laravel\Scout\Searchable;
 use Minishop\Database\Factories\ProductFactory;
 use Minishop\Enums\ProductType;
 
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
-    use HasFactory;
+    use HasFactory, Searchable;
 
     protected $fillable = [
         'type',
@@ -72,6 +73,20 @@ class Product extends Model
     public function getRouteKeyName(): string
     {
         return 'slug';
+    }
+
+    /**
+     * The columns Scout searches over (and the upgrade path's index payload).
+     *
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'description' => $this->description,
+            'sku' => $this->sku,
+        ];
     }
 
     public function categories(): BelongsToMany
