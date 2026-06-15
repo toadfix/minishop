@@ -217,6 +217,8 @@ class InstallCommand extends Command
             'password' => Hash::make($password),
         ]);
 
+        $user->markEmailAsVerified();
+
         $role = Role::where('name', 'super-admin')
             ->where('guard_name', config('auth.defaults.guard', 'web'))
             ->first();
