@@ -2,12 +2,16 @@
 
 namespace Minishop;
 
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
+use Laravel\Fortify\Fortify;
 use Livewire\Livewire;
 use Minishop\Actions\Fortify\CreateNewUser;
 use Minishop\Console\Commands\InstallCommand;
@@ -94,6 +98,12 @@ class MinishopServiceProvider extends ServiceProvider
     public function boot(): void
     {
         EncryptCookies::except('cart_token');
+
+        // Fortify's email-verification feature is enabled by default; point its
+        // "verify your email" notice route at the storefront view we ship, and
+        // send the verification mail when a customer registers.
+        Fortify::verifyEmailView(fn () => view('minishop::auth.verify-email'));
+        Event::listen(Registered::class, SendEmailVerificationNotification::class);
 
         if ($this->app->runningUnitTests()) {
             $this->loadMigrationsFrom(__DIR__.'/../database/migrations');

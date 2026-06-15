@@ -75,6 +75,12 @@ npm run build
 Until the assets are built, the layout falls back to the Tailwind Play CDN so
 the storefront is usable out of the box.
 
+**Email verification.** Customer accounts must confirm their email before
+reaching the `/account` area — registration sends a verification link (via
+Fortify's email-verification feature, enabled by default) and the package ships
+the storefront notice page, so make sure your app has a working mail driver. The
+admin user created by `minishop:install` is marked verified automatically.
+
 > **Upgrading:** publishing copies the storefront views into your app, and your
 > copies take precedence over the package's. After upgrading the package, the
 > shipped views may have changed — re-publish to pick up the new versions:
