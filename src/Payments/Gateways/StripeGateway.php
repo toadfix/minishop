@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use Minishop\Enums\OrderStatus;
 use Minishop\Mail\OrderConfirmationMail;
 use Minishop\Models\Order;
+use Minishop\Models\ProcessedWebhookEvent;
 use Minishop\Models\StoreSettings;
 use Minishop\Payments\Contracts\PaymentGatewayContract;
 use Stripe\Exception\SignatureVerificationException;
@@ -86,31 +87,46 @@ class StripeGateway implements PaymentGatewayContract
             return response('Invalid signature', 400);
         }
 
-        if ($event->type === 'payment_intent.succeeded') {
-            $paymentIntent = $event->data->object;
+        // Record the event before acting on it. The unique (gateway, event_id)
+        // index makes a redelivery of the same event a no-op, so Stripe retries
+        // can never double-fulfil or double-email an order. Real Stripe events
+        // always carry an id; fall back to a content hash if one is ever absent.
+        $eventId = $event->id ?: sha1($payload);
 
-            DB::transaction(function () use ($paymentIntent): void {
-                $order = Order::query()
-                    ->where('payment_intent_id', $paymentIntent->id)
-                    ->where('payment_status', '!=', 'paid')
-                    ->lockForUpdate()
-                    ->with(['customer.user', 'items', 'shippingMethod', 'coupon'])
-                    ->first();
+        DB::transaction(function () use ($event, $eventId): void {
+            $claim = ProcessedWebhookEvent::query()->firstOrCreate(
+                ['gateway' => 'stripe', 'event_id' => $eventId],
+                ['type' => $event->type],
+            );
 
-                if (! $order || ! $order->customer?->user) {
-                    return;
-                }
+            if (! $claim->wasRecentlyCreated) {
+                return;
+            }
 
-                $order->update([
-                    'payment_status' => 'paid',
-                    'status' => OrderStatus::Processing,
-                    'paid_at' => now(),
-                ]);
+            if ($event->type !== 'payment_intent.succeeded') {
+                return;
+            }
 
-                Mail::to($order->customer->user->email)
-                    ->queue(new OrderConfirmationMail($order));
-            });
-        }
+            $order = Order::query()
+                ->where('payment_intent_id', $event->data->object->id)
+                ->where('payment_status', '!=', 'paid')
+                ->lockForUpdate()
+                ->with(['customer.user', 'items', 'shippingMethod', 'coupon'])
+                ->first();
+
+            if (! $order || ! $order->customer?->user) {
+                return;
+            }
+
+            $order->update([
+                'payment_status' => 'paid',
+                'status' => OrderStatus::Processing,
+                'paid_at' => now(),
+            ]);
+
+            Mail::to($order->customer->user->email)
+                ->queue(new OrderConfirmationMail($order));
+        });
 
         return response('OK', 200);
     }
