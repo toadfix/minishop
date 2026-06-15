@@ -22,6 +22,8 @@ class ProductController extends Controller
                 });
             })
             ->with(['categories', 'images'])
+            ->withCount('approvedReviews')
+            ->withAvg('approvedReviews', 'rating')
             ->paginate(20);
 
         return new ProductCollection($products);
@@ -31,7 +33,9 @@ class ProductController extends Controller
     {
         abort_unless($product->is_active, 404);
 
-        $product->load(['categories', 'images']);
+        $product->load(['categories', 'images'])
+            ->loadCount('approvedReviews')
+            ->loadAvg('approvedReviews', 'rating');
 
         return new ProductResource($product);
     }

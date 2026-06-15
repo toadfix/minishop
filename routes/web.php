@@ -13,6 +13,7 @@ use Minishop\Http\Controllers\Storefront\CheckoutShippingRatesController;
 use Minishop\Http\Controllers\Storefront\HomeController;
 use Minishop\Http\Controllers\Storefront\PaymentController;
 use Minishop\Http\Controllers\Storefront\ProductController as StorefrontProductController;
+use Minishop\Http\Controllers\Storefront\ReviewController;
 use Minishop\Http\Controllers\Storefront\SupportChatController;
 use Minishop\Http\Controllers\Storefront\TaxPreviewController;
 use Minishop\Http\Controllers\Webhooks\WebhookController;
@@ -25,6 +26,9 @@ Route::post('/chat', [SupportChatController::class, 'store'])->name('storefront.
 Route::prefix('products')->name('storefront.products.')->group(function () {
     Route::get('/', [StorefrontProductController::class, 'index'])->name('index');
     Route::get('/{product:slug}', [StorefrontProductController::class, 'show'])->name('show');
+    Route::post('/{product:slug}/reviews', [ReviewController::class, 'store'])
+        ->middleware(['auth', 'verified'])
+        ->name('reviews.store');
 });
 
 Route::prefix('cart')->name('storefront.cart.')->group(function () {

@@ -5,6 +5,7 @@ namespace Minishop\Tests\Feature\Api\V1;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Minishop\Models\Product;
 use Minishop\Models\ProductImage;
+use Minishop\Models\Review;
 use Minishop\Tests\TestCase;
 
 class ProductApiTest extends TestCase
@@ -68,6 +69,19 @@ class ProductApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.images.0.path', 'products/widget.jpg')
             ->assertJsonPath('data.images.0.url', fn ($url) => is_string($url) && str_contains($url, 'products/widget.jpg'));
+    }
+
+    public function test_product_exposes_approved_rating_average_and_count(): void
+    {
+        $product = Product::factory()->create();
+        Review::factory()->approved()->create(['product_id' => $product->id, 'rating' => 5]);
+        Review::factory()->approved()->create(['product_id' => $product->id, 'rating' => 4]);
+        Review::factory()->create(['product_id' => $product->id, 'rating' => 1]); // pending, excluded
+
+        $this->getJson("/api/v1/products/{$product->slug}")
+            ->assertOk()
+            ->assertJsonPath('data.reviews_count', 2)
+            ->assertJsonPath('data.rating_average', 4.5);
     }
 
     public function test_inactive_product_returns_404(): void
