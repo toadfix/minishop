@@ -187,6 +187,40 @@ class StripeWebhookTest extends TestCase
         Mail::assertNotQueued(OrderConfirmationMail::class);
     }
 
+    public function test_stripe_webhook_is_idempotent_across_redelivery_of_the_same_event(): void
+    {
+        Mail::fake();
+
+        $order = $this->makeOrder();
+
+        $eventPayload = json_encode([
+            'id' => 'evt_idempotent_1',
+            'type' => 'payment_intent.succeeded',
+            'data' => [
+                'object' => [
+                    'id' => 'pi_test_123',
+                    'object' => 'payment_intent',
+                    'status' => 'succeeded',
+                    'amount' => 10000,
+                    'currency' => 'php',
+                ],
+            ],
+        ]);
+
+        $sigHeader = $this->buildSignatureHeader($eventPayload);
+        $headers = ['HTTP_STRIPE_SIGNATURE' => $sigHeader, 'CONTENT_TYPE' => 'application/json'];
+
+        // Deliver the same event twice, as Stripe does on retries.
+        $this->call('POST', route('webhooks.stripe'), [], [], [], $headers, $eventPayload)->assertStatus(200);
+        $this->call('POST', route('webhooks.stripe'), [], [], [], $headers, $eventPayload)->assertStatus(200);
+
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'paid']);
+
+        // The event is recorded once and the side effects fire once.
+        $this->assertDatabaseCount('processed_webhook_events', 1);
+        Mail::assertQueued(OrderConfirmationMail::class, 1);
+    }
+
     public function test_stripe_webhook_ignores_unhandled_event_types(): void
     {
         $eventPayload = json_encode([
