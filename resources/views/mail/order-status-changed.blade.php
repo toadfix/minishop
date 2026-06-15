@@ -6,6 +6,12 @@ Hi {{ $order->customer->user->name }},
 @switch($order->status->value)
 @case('shipped')
 Great news! Your order **{{ $order->order_number }}** has been shipped and is on its way to you.
+@if ($order->tracking_number)
+
+@if ($order->carrier)**Carrier:** {{ $order->carrier }}
+@endif
+**Tracking number:** {{ $order->tracking_number }}
+@endif
 @break
 @case('delivered')
 Your order **{{ $order->order_number }}** has been delivered. We hope you enjoy your purchase!

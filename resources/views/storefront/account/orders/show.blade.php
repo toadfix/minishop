@@ -44,15 +44,37 @@
             </dl>
         </div>
 
-        <aside class="h-fit rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-600">
-            <h2 class="font-semibold text-gray-900">Shipping to</h2>
-            <address class="mt-2 not-italic leading-relaxed">
-                {{ $order->shipping_name }}<br>
-                {{ $order->shipping_address_line1 }}<br>
-                @if ($order->shipping_address_line2){{ $order->shipping_address_line2 }}<br>@endif
-                {{ $order->shipping_city }}, {{ $order->shipping_state }} {{ $order->shipping_postcode }}<br>
-                {{ $order->shipping_country }}
-            </address>
+        <aside class="h-fit space-y-6 rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-600">
+            <div>
+                <h2 class="font-semibold text-gray-900">Shipping to</h2>
+                <address class="mt-2 not-italic leading-relaxed">
+                    {{ $order->shipping_name }}<br>
+                    {{ $order->shipping_address_line1 }}<br>
+                    @if ($order->shipping_address_line2){{ $order->shipping_address_line2 }}<br>@endif
+                    {{ $order->shipping_city }}, {{ $order->shipping_state }} {{ $order->shipping_postcode }}<br>
+                    {{ $order->shipping_country }}
+                </address>
+            </div>
+
+            @if ($order->tracking_number || $order->shipped_at)
+                <div class="border-t border-gray-100 pt-6">
+                    <h2 class="font-semibold text-gray-900">Shipment</h2>
+                    <dl class="mt-2 space-y-1">
+                        @if ($order->carrier)
+                            <div class="flex justify-between gap-2"><dt class="text-gray-500">Carrier</dt><dd class="text-gray-900">{{ $order->carrier }}</dd></div>
+                        @endif
+                        @if ($order->tracking_number)
+                            <div class="flex justify-between gap-2"><dt class="text-gray-500">Tracking #</dt><dd class="font-medium text-gray-900">{{ $order->tracking_number }}</dd></div>
+                        @endif
+                        @if ($order->shipped_at)
+                            <div class="flex justify-between gap-2"><dt class="text-gray-500">Shipped</dt><dd class="text-gray-900">{{ $order->shipped_at->format('M j, Y') }}</dd></div>
+                        @endif
+                        @if ($order->delivered_at)
+                            <div class="flex justify-between gap-2"><dt class="text-gray-500">Delivered</dt><dd class="text-gray-900">{{ $order->delivered_at->format('M j, Y') }}</dd></div>
+                        @endif
+                    </dl>
+                </div>
+            @endif
         </aside>
     </div>
 @endsection

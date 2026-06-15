@@ -60,6 +60,16 @@ class OrderResource extends Resource
                 ->preload()
                 ->nullable(),
 
+            TextInput::make('carrier')
+                ->label('Shipping carrier')
+                ->maxLength(255)
+                ->placeholder('e.g. Canada Post')
+                ->nullable(),
+
+            TextInput::make('tracking_number')
+                ->maxLength(255)
+                ->nullable(),
+
             TextInput::make('shipping_name')
                 ->maxLength(255),
 
@@ -124,6 +134,20 @@ class OrderResource extends Resource
                     TextEntry::make('created_at')
                         ->dateTime()
                         ->label('Placed At'),
+
+                    TextEntry::make('carrier')
+                        ->placeholder('—'),
+
+                    TextEntry::make('tracking_number')
+                        ->placeholder('—'),
+
+                    TextEntry::make('shipped_at')
+                        ->dateTime()
+                        ->placeholder('Not shipped'),
+
+                    TextEntry::make('delivered_at')
+                        ->dateTime()
+                        ->placeholder('Not delivered'),
                 ])
                 ->columns(2),
 
