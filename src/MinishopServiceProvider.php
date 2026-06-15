@@ -11,9 +11,11 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
+use Laravel\Fortify\Contracts\ResetsUserPasswords;
 use Laravel\Fortify\Fortify;
 use Livewire\Livewire;
 use Minishop\Actions\Fortify\CreateNewUser;
+use Minishop\Actions\Fortify\ResetUserPassword;
 use Minishop\Console\Commands\InstallCommand;
 use Minishop\Http\Responses\LoginResponse;
 use Minishop\Http\Responses\RegisterResponse;
@@ -81,6 +83,10 @@ class MinishopServiceProvider extends ServiceProvider
             CreatesNewUsers::class,
             CreateNewUser::class
         );
+        $this->app->singleton(
+            ResetsUserPasswords::class,
+            ResetUserPassword::class
+        );
 
         $this->app->singleton('minishop.payment', fn ($app) => new PaymentManager($app));
 
@@ -99,9 +105,14 @@ class MinishopServiceProvider extends ServiceProvider
     {
         EncryptCookies::except('cart_token');
 
-        // Fortify's email-verification feature is enabled by default; point its
-        // "verify your email" notice route at the storefront view we ship, and
-        // send the verification mail when a customer registers.
+        // Point Fortify's customer-facing auth pages at the storefront views we
+        // ship (the admin panel uses Filament's own login). Fortify's login,
+        // registration, password-reset and email-verification features are all
+        // enabled in its default config, so the routes already exist.
+        Fortify::loginView(fn () => view('minishop::auth.login'));
+        Fortify::registerView(fn () => view('minishop::storefront.auth.register'));
+        Fortify::requestPasswordResetLinkView(fn () => view('minishop::auth.forgot-password'));
+        Fortify::resetPasswordView(fn ($request) => view('minishop::auth.reset-password', ['request' => $request]));
         Fortify::verifyEmailView(fn () => view('minishop::auth.verify-email'));
         Event::listen(Registered::class, SendEmailVerificationNotification::class);
 
