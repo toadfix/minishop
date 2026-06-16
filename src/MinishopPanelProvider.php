@@ -3,6 +3,7 @@
 namespace Minishop;
 
 use Filament\Http\Middleware\Authenticate;
+use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -52,6 +53,7 @@ class MinishopPanelProvider extends PanelProvider
                 ActivityLogResource::class,
             ])
             ->pages([
+                Dashboard::class,
                 ManageStoreSettings::class,
             ])
             ->widgets([
