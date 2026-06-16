@@ -3,6 +3,7 @@
 namespace Minishop\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
+use Minishop\Actions\SearchProducts;
 use Minishop\Http\Controllers\Controller;
 use Minishop\Http\Resources\ProductCollection;
 use Minishop\Http\Resources\ProductResource;
@@ -10,21 +11,17 @@ use Minishop\Models\Product;
 
 class ProductController extends Controller
 {
+    public function __construct(private SearchProducts $search) {}
+
     public function index(Request $request): ProductCollection
     {
-        $products = Product::query()
-            ->where('is_active', true)
-            ->when($request->search, function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%")
-                        ->orWhere('sku', 'like', "%{$search}%");
-                });
-            })
-            ->with(['categories', 'images'])
-            ->withCount('approvedReviews')
-            ->withAvg('approvedReviews', 'rating')
-            ->paginate(20);
+        $filters = $request->only(['search', 'category', 'tag', 'price_min', 'price_max', 'stock']);
+
+        $products = $this->search->paginate($filters, perPage: 20, tap: function ($query): void {
+            $query->with(['categories', 'images'])
+                ->withCount('approvedReviews')
+                ->withAvg('approvedReviews', 'rating');
+        });
 
         return new ProductCollection($products);
     }

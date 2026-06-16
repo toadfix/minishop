@@ -3,6 +3,7 @@
 namespace Minishop\Http\Controllers\Storefront;
 
 use Illuminate\Http\Request;
+use Minishop\Actions\SearchProducts;
 use Minishop\Http\Controllers\Controller;
 use Minishop\Models\Category;
 use Minishop\Models\Product;
@@ -13,44 +14,18 @@ use Minishop\Rendering\StorefrontRendererContract;
 
 class ProductController extends Controller
 {
-    public function __construct(private StorefrontRendererContract $renderer) {}
+    public function __construct(
+        private StorefrontRendererContract $renderer,
+        private SearchProducts $search,
+    ) {}
 
     public function index(Request $request): mixed
     {
-        $products = Product::query()
-            ->where('is_active', true)
-            ->with(['categories', 'tags', 'images', 'options.values', 'variants.optionValues', 'variants.images'])
-            ->when($request->filled('category'), function ($query) use ($request): void {
-                $query->whereHas('categories', fn ($q) => $q->where('slug', $request->string('category')));
-            })
-            ->when($request->filled('tag'), function ($query) use ($request): void {
-                $query->whereHas('tags', fn ($q) => $q->where('slug', $request->string('tag')));
-            })
-            ->when($request->filled('search'), function ($query) use ($request): void {
-                $search = $request->string('search');
-                $query->where(function ($q) use ($search): void {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
-                });
-            })
-            ->when($request->filled('price_min'), function ($query) use ($request): void {
-                $query->where('price', '>=', (int) round((float) $request->input('price_min') * 100));
-            })
-            ->when($request->filled('price_max'), function ($query) use ($request): void {
-                $query->where('price', '<=', (int) round((float) $request->input('price_max') * 100));
-            })
-            ->when($request->filled('stock'), function ($query) use ($request): void {
-                // Exclude bundled products — their stock is computed, not stored
-                $query->where('type', '!=', 'bundled');
+        $filters = $request->only(['category', 'tag', 'search', 'price_min', 'price_max', 'stock']);
 
-                if ($request->input('stock') === 'in_stock') {
-                    $query->where('stock_quantity', '>', 0);
-                } elseif ($request->input('stock') === 'out_of_stock') {
-                    $query->where('stock_quantity', 0);
-                }
-            })
-            ->paginate(24)
-            ->withQueryString();
+        $products = $this->search->paginate($filters, perPage: 24, tap: function ($query): void {
+            $query->with(['categories', 'tags', 'images', 'options.values', 'variants.optionValues', 'variants.images']);
+        });
 
         $categories = Category::query()
             ->where('is_active', true)
@@ -68,7 +43,7 @@ class ProductController extends Controller
             'products' => $products,
             'categories' => $categories,
             'tags' => $tags,
-            'filters' => $request->only(['category', 'tag', 'search', 'price_min', 'price_max', 'stock']),
+            'filters' => $filters,
             'sale_discount_percentage' => StoreSettings::current()->sale_discount_percentage ?? 0,
         ]);
     }

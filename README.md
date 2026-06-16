@@ -108,6 +108,16 @@ The published config file is at `config/minishop.php`. Key options:
 | `image_disk` | `MINISHOP_IMAGE_DISK` | `public` | Filesystem disk for product images |
 | `low_stock_notification_email` | `MINISHOP_LOW_STOCK_EMAIL` | — | Email address for low-stock alerts |
 
+### Product search
+
+Product search (storefront, Livewire list, and the REST API) runs through
+[Laravel Scout](https://laravel.com/docs/scout). It defaults to Scout's portable
+**`database`** engine — no external service required, works on SQLite/MySQL/
+Postgres, and matches across product name, description, and SKU. To scale up,
+set `SCOUT_DRIVER` (e.g. `meilisearch` or `algolia`) and configure that engine;
+`Minishop\Models\Product` is already `Searchable`. Facet filters (category, tag,
+price range, stock) are applied on top of the search results.
+
 ---
 
 ## Environment Variables

@@ -8,6 +8,7 @@ use Laravel\Ai\AiServiceProvider;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\FortifyServiceProvider;
 use Laravel\Sanctum\SanctumServiceProvider;
+use Laravel\Scout\ScoutServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Minishop\MinishopPanelProvider;
 use Minishop\MinishopServiceProvider;
@@ -35,6 +36,7 @@ abstract class TestCase extends BaseTestCase
         return [
             AiServiceProvider::class,
             LivewireServiceProvider::class,
+            ScoutServiceProvider::class,
             FilamentServiceProvider::class,
             SanctumServiceProvider::class,
             FortifyServiceProvider::class,
@@ -58,6 +60,7 @@ abstract class TestCase extends BaseTestCase
     {
         $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
         $app['config']->set('minishop.load_storefront_routes', true);
+        $app['config']->set('scout.driver', 'database');
 
         $app['config']->set('auth.defaults.guard', 'web');
         $app['config']->set('auth.guards.web', [
