@@ -150,6 +150,7 @@ MINISHOP_LOW_STOCK_EMAIL=store@example.com
 The Filament admin panel is available at `/dashboard` (or the path configured in `MINISHOP_PANEL_PATH`).
 
 **Available panels:**
+- Dashboard — analytics widgets: revenue (this month + 30-day chart, gated to admins), orders this month, new customers, a needs-attention counter, orders-by-status, latest orders, and low-stock products
 - Products — full CRUD with options, variants, and images (managed inline as relation managers); bulk delete
 - Categories & Tags — full CRUD
 - Orders — lifecycle management, bulk status updates, and downloadable invoice PDFs (also emailed to the customer on confirmation)

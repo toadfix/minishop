@@ -18,6 +18,7 @@ class RoleAndPermissionSeeder extends Seeder
 
         $permissions = [
             'dashboard.view',
+            'dashboard.revenue',
             'products.view',
             'products.create',
             'products.update',
@@ -75,6 +76,7 @@ class RoleAndPermissionSeeder extends Seeder
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $adminRole->syncPermissions([
             'dashboard.view',
+            'dashboard.revenue',
             'products.view', 'products.create', 'products.update', 'products.delete',
             'categories.view', 'categories.create', 'categories.update', 'categories.delete',
             'orders.view', 'orders.create', 'orders.update', 'orders.delete', 'orders.invoice', 'orders.refund',
