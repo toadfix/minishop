@@ -79,13 +79,15 @@ class ProcessReturnAction
                 'refunded_at' => now(),
             ]);
 
-            $totalRefunded = $order->returns()
-                ->where('status', ReturnStatus::Refunded->value)
-                ->sum('refund_amount');
+            // Maintain the order-level refunded total so the returns flow and
+            // the direct admin refund share a single cap.
+            $order->increment('refunded_amount', $refundAmount);
+            $order->refresh();
 
-            if ($totalRefunded >= $order->total_amount) {
-                $order->update(['status' => OrderStatus::Refunded]);
-            }
+            $order->update([
+                'refunded_at' => now(),
+                'status' => $order->refunded_amount >= $order->total_amount ? OrderStatus::Refunded : $order->status,
+            ]);
         });
     }
 }

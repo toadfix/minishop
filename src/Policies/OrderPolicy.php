@@ -46,6 +46,11 @@ class OrderPolicy
         return $user->can('orders.invoice');
     }
 
+    public function refund(User $user, Order $order): bool
+    {
+        return $user->can('orders.refund');
+    }
+
     public function delete(User $user, Order $order): bool
     {
         return $user->can('orders.delete');
