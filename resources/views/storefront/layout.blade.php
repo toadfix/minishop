@@ -14,6 +14,7 @@
     @endif
 
     @livewireStyles
+    @include('minishop::analytics.head')
 </head>
 <body class="flex min-h-full flex-col bg-gray-50 text-gray-900 antialiased">
     <header class="border-b border-gray-200 bg-white">

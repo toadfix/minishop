@@ -22,6 +22,15 @@ return [
 
     'default_payment_gateway' => env('MINISHOP_DEFAULT_GATEWAY', 'stripe'),
 
+    /*
+     * Storefront analytics. Set the GA4 Measurement ID (e.g. G-XXXXXXX) to
+     * inject gtag.js on every storefront page and fire a `purchase` event on
+     * the order-confirmation page. Leave unset to disable.
+     */
+    'analytics' => [
+        'ga4_measurement_id' => env('MINISHOP_GA4_ID'),
+    ],
+
     'canada_post' => [
         'username' => env('CANADA_POST_USERNAME'),
         'password' => env('CANADA_POST_PASSWORD'),
