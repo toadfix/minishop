@@ -297,6 +297,48 @@ interface PaymentGatewayContract
 
 ---
 
+## Queues & background work
+
+Minishop pushes outbound work onto the queue rather than blocking the request:
+
+- **Order confirmation emails** — sent after checkout (COD) and after the Stripe
+  webhook confirms payment. These render the **invoice PDF** as an attachment,
+  which is CPU work you don't want inline in a webhook.
+- **Order status emails** — sent when an order moves to shipped/delivered/
+  cancelled/refunded.
+- **Low-stock alerts** — a queued notification to `MINISHOP_LOW_STOCK_EMAIL`.
+
+### Out of the box
+
+With Laravel's default `QUEUE_CONNECTION=sync`, these run **inline** — everything
+works with no worker, but checkout and webhook responses pay the cost of sending
+mail and rendering PDFs. Fine for local/dev and low volume.
+
+### In production
+
+Use a real queue and run a worker:
+
+```env
+QUEUE_CONNECTION=database   # or redis
+```
+
+```bash
+php artisan migrate          # creates the jobs / failed_jobs tables
+php artisan queue:work --tries=3 --max-time=3600
+```
+
+Run the worker under a process supervisor (Supervisor, systemd, or your
+platform's worker process) so it restarts on failure and after deploys
+(`php artisan queue:restart`). Inspect and replay failures with
+`php artisan queue:failed` and `php artisan queue:retry all`.
+
+> **Gotcha:** on a non-`sync` connection, **emails only send when a worker is
+> running.** If order confirmations aren't arriving in production, check that a
+> `queue:work` process is up. Stripe webhook handling is idempotent (deduped on
+> the Stripe event id), so retried deliveries never double-send.
+
+---
+
 ## Custom Storefront Renderer
 
 To use your own frontend (Inertia, a custom Blade theme, an SPA API bridge,
