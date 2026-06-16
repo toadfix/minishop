@@ -31,6 +31,8 @@ class Order extends Model
         'shipping_amount',
         'tax_amount',
         'total_amount',
+        'refunded_amount',
+        'refunded_at',
         'shipping_name',
         'shipping_address_line1',
         'shipping_address_line2',
@@ -52,11 +54,22 @@ class Order extends Model
             'shipping_amount' => 'integer',
             'tax_amount' => 'integer',
             'total_amount' => 'integer',
+            'refunded_amount' => 'integer',
             'paid_at' => 'datetime',
+            'refunded_at' => 'datetime',
             'shipped_at' => 'datetime',
             'delivered_at' => 'datetime',
             'tax_breakdown' => 'array',
         ];
+    }
+
+    /**
+     * The amount still eligible to be refunded (order total minus what has
+     * already been refunded, across both the returns flow and direct refunds).
+     */
+    public function refundableAmount(): int
+    {
+        return max(0, $this->total_amount - $this->refunded_amount);
     }
 
     protected static function booted(): void

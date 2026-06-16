@@ -10,6 +10,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -19,6 +20,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Minishop\Actions\GenerateInvoicePdf;
+use Minishop\Actions\RefundOrderAction;
 use Minishop\Enums\OrderStatus;
 use Minishop\Filament\Resources\OrderResource\Pages;
 use Minishop\Filament\Resources\OrderResource\RelationManagers\ItemsRelationManager;
@@ -249,6 +251,37 @@ class OrderResource extends Resource
                         app(GenerateInvoicePdf::class)->filename($record),
                         ['Content-Type' => 'application/pdf'],
                     )),
+                Action::make('refund')
+                    ->label('Refund')
+                    ->icon('heroicon-o-receipt-refund')
+                    ->color('danger')
+                    ->visible(fn (Order $record) => $record->refundableAmount() > 0 && auth()->user()?->can('refund', $record))
+                    ->form(fn (Order $record) => [
+                        TextInput::make('amount')
+                            ->label('Amount to refund')
+                            ->numeric()
+                            ->prefix('$')
+                            ->required()
+                            ->minValue(0.01)
+                            ->maxValue($record->refundableAmount() / 100)
+                            ->default($record->refundableAmount() / 100)
+                            ->helperText('Refundable balance: $'.number_format($record->refundableAmount() / 100, 2)),
+                        Textarea::make('reason')
+                            ->maxLength(500)
+                            ->nullable(),
+                    ])
+                    ->action(function (Order $record, array $data): void {
+                        try {
+                            app(RefundOrderAction::class)->execute(
+                                $record,
+                                (int) round(((float) $data['amount']) * 100),
+                                $data['reason'] ?? null,
+                            );
+                            Notification::make()->success()->title('Refund processed')->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()->danger()->title('Refund failed')->body($e->getMessage())->send();
+                        }
+                    }),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
