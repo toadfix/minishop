@@ -107,6 +107,17 @@ The published config file is at `config/minishop.php`. Key options:
 | `panel_path` | `MINISHOP_PANEL_PATH` | `dashboard` | URL path for the Filament admin panel |
 | `image_disk` | `MINISHOP_IMAGE_DISK` | `public` | Filesystem disk for product images |
 | `low_stock_notification_email` | `MINISHOP_LOW_STOCK_EMAIL` | — | Email address for low-stock alerts |
+| `analytics.ga4_measurement_id` | `MINISHOP_GA4_ID` | — | Google Analytics 4 Measurement ID (e.g. `G-XXXXXXX`) |
+
+### Analytics
+
+Set `MINISHOP_GA4_ID` to your Google Analytics 4 Measurement ID and the
+storefront injects `gtag.js` on every page and fires a GA4 **`purchase`** event
+on the order-confirmation page (with `transaction_id`, `value`, `currency`,
+`shipping`, `tax`, and line `items`). Leave it unset to disable tracking
+entirely. The snippets live in publishable Blade partials
+(`resources/views/vendor/minishop/analytics/*`) if you need to customise them or
+add another provider.
 
 ### Product search
 

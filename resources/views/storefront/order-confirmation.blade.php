@@ -41,4 +41,6 @@
     <div class="mt-8 text-center">
         <a href="{{ route('storefront.products.index') }}" class="font-medium text-brand-600 hover:underline">Continue shopping</a>
     </div>
+
+    @include('minishop::analytics.purchase', ['order' => $order])
 @endsection
